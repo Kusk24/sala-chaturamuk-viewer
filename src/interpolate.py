@@ -82,6 +82,9 @@ def main():
     p.add_argument("--out", required=True, help="output sequence directory")
     p.add_argument("--n-between", type=int, default=2, help="synthesized frames per pair (default: 2)")
     p.add_argument("--quality", type=int, default=95, help="JPEG quality (default: 95)")
+    p.add_argument("--wraparound", action="store_true",
+                   help="also interpolate from the last captured frame back to the first. Only "
+                        "pass this if a full revolution was genuinely walked")
     # Farneback parameters, exposed so they can be tuned against the roof tiling.
     p.add_argument("--pyr-scale", type=float, default=0.5)
     p.add_argument("--levels", type=int, default=3)
@@ -116,8 +119,23 @@ def main():
         records.append({"file": name, "kind": "real", "source_file": names[index],
                         "pair_a": index, "pair_b": None, "t": 0.0})
 
+    def synthesize(img_a, img_b, i):
+        """Write the --n-between views that sit between captured frames i and i+1."""
+        gray_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
+        gray_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
+        flow_ab = farneback(gray_a, gray_b, args)
+        flow_ba = farneback(gray_b, gray_a, args)
+        for k in range(1, args.n_between + 1):
+            t = k / (args.n_between + 1)
+            out = interpolate_pair(img_a, img_b, flow_ab, flow_ba, t, grid_x, grid_y)
+            name = f"frame_{i:04d}_i{k}.jpg"
+            cv2.imwrite(os.path.join(args.out, name), out, [cv2.IMWRITE_JPEG_QUALITY, args.quality])
+            records.append({"file": name, "kind": "synth", "source_file": None,
+                            "pair_a": i, "pair_b": (i + 1) % len(names), "t": round(t, 6)})
+
     img_a = first
-    # Adjacent pairs only, and no wraparound -- the capture is a partial arc.
+    # Adjacent pairs only. The capture is normally a partial arc, so by default
+    # the last frame is NOT joined back to the first.
     for i in range(len(names) - 1):
         img_b = cv2.imread(os.path.join(args.frames, names[i + 1]))
         if img_b is None:
@@ -127,33 +145,26 @@ def main():
                      f"expected {w}x{h}; re-run extract_frames.py with --width")
 
         emit_real(i, img_a)
-
         if args.n_between:
-            gray_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2GRAY)
-            gray_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
-            flow_ab = farneback(gray_a, gray_b, args)
-            flow_ba = farneback(gray_b, gray_a, args)
-
-            for k in range(1, args.n_between + 1):
-                t = k / (args.n_between + 1)
-                out = interpolate_pair(img_a, img_b, flow_ab, flow_ba, t, grid_x, grid_y)
-                name = f"frame_{i:04d}_i{k}.jpg"
-                cv2.imwrite(os.path.join(args.out, name), out, [cv2.IMWRITE_JPEG_QUALITY, args.quality])
-                records.append({"file": name, "kind": "synth", "source_file": None,
-                                "pair_a": i, "pair_b": i + 1, "t": round(t, 6)})
+            synthesize(img_a, img_b, i)
 
         print(f"[{i:3d}/{len(names) - 2}] {names[i]} -> {names[i + 1]}: "
               f"+{args.n_between} synthesized")
         img_a = img_b
 
-    emit_real(len(names) - 1, img_a)  # final real frame; arc ends here, no wraparound
+    emit_real(len(names) - 1, img_a)  # final captured frame
+
+    if args.wraparound and args.n_between:
+        # Only reached when a full revolution was genuinely walked.
+        synthesize(img_a, first, len(names) - 1)
+        print(f"[wrap] {names[-1]} -> {names[0]}: +{args.n_between} synthesized")
 
     meta = {
         "frames_dir": args.frames,
         "n_captured": len(names),
         "n_between": args.n_between,
         "n_total": len(records),
-        "wraparound": False,
+        "wraparound": args.wraparound,
         "method": "farneback-flow view interpolation (backward warp + cross-dissolve)",
         "farneback": {
             "pyr_scale": args.pyr_scale, "levels": args.levels, "winsize": args.winsize,

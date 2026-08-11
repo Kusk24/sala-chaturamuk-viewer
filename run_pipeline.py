@@ -9,7 +9,7 @@ That is the whole workflow. Drop in a folder of photographs, or a video of the
 walkaround, and this finds it, runs every stage in order, and leaves you with
 viewer/index.html ready to open.
 
-    python run_pipeline.py --angular-step 12         # record the measured capture step
+    python run_pipeline.py --start-angle 0 --end-angle 214   # the arc you measured on site
     python run_pipeline.py --every 15                # hold out frames for evaluation
     python run_pipeline.py --resume                  # skip stages already done
     python run_pipeline.py --dry-run                 # print the commands, run nothing
@@ -104,9 +104,13 @@ def main():
                    help="keep every Nth frame as the capture set. >1 holds the rest out for "
                         "evaluation. Default: 15 for video, 1 for photographs")
     p.add_argument("--n-between", type=int, default=2, help="synthesized views per pair (default: 2)")
+    p.add_argument("--start-angle", type=float, default=0.0, help="measured angle of the first frame")
+    p.add_argument("--end-angle", type=float, default=None,
+                   help="measured angle of the last frame; the mean step is derived from it")
     p.add_argument("--angular-step", type=float, default=None,
-                   help="measured degrees between captured frames; recorded, never guessed")
-    p.add_argument("--start-angle", type=float, default=0.0)
+                   help="nominal degrees between captured frames; prefer --end-angle once measured")
+    p.add_argument("--wraparound", action="store_true",
+                   help="only if a full revolution was genuinely walked: close the arc")
     p.add_argument("--width", type=int, default=None, help="resize frames to this width")
     p.add_argument("--min-inliers", type=int, default=30, help="warn below this many inliers per pair")
     p.add_argument("--from", dest="from_stage", choices=STAGE_ORDER, default=None,
@@ -142,10 +146,14 @@ def main():
     print(f"Capture set   every {every} frame{'s' if every > 1 else ''}"
           f"{'  (rest held out for evaluation)' if holdout else '  (nothing held out)'}")
     print(f"Synthesis     {args.n_between} in-between view(s) per adjacent pair")
-    if args.angular_step is None:
-        print("Angles        not recorded — pass --angular-step to write real angles")
+    if args.end_angle is not None:
+        print(f"Angles        measured arc {args.start_angle} to {args.end_angle} deg; "
+              f"mean step derived from the frame count")
+    elif args.angular_step is not None:
+        print(f"Angles        {args.angular_step} deg nominal step between captured frames")
     else:
-        print(f"Angles        {args.angular_step} deg between captured frames")
+        print("Angles        not recorded — pass --start-angle/--end-angle once measured on site")
+    print(f"Arc           {'closed revolution' if args.wraparound else 'partial (no wraparound)'}")
 
     py = sys.executable
     common = ["--width", str(args.width)] if args.width else []
@@ -172,13 +180,16 @@ def main():
 
         ("interpolate", [py, os.path.join(SRC, "interpolate.py"),
                          "--frames", selected, "--out", sequence,
-                         "--n-between", str(args.n_between)],
+                         "--n-between", str(args.n_between)]
+                        + (["--wraparound"] if args.wraparound else []),
          os.path.join(sequence, "interpolation.json"), True, ""),
 
         ("sequence", [py, os.path.join(SRC, "build_sequence.py"),
                       "--frames", sequence, "--out", manifest,
                       "--start-angle", str(args.start_angle)]
-                     + (["--angular-step", str(args.angular_step)] if args.angular_step is not None else []),
+                     + (["--end-angle", str(args.end_angle)] if args.end_angle is not None else [])
+                     + (["--angular-step", str(args.angular_step)] if args.angular_step is not None else [])
+                     + (["--wraparound"] if args.wraparound else []),
          manifest, True, ""),
 
         ("evaluate", [py, os.path.join(SRC, "evaluate.py"),
@@ -222,6 +233,8 @@ def main():
         "n_between": args.n_between,
         "angular_step_deg": args.angular_step,
         "start_angle_deg": args.start_angle,
+        "end_angle_deg": args.end_angle,
+        "wraparound": args.wraparound,
         "width": args.width,
         "stages_run": [name for name, _ in timings],
         "stages_skipped": [{"stage": n, "reason": w} for n, w in skipped],

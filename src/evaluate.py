@@ -81,6 +81,11 @@ def main():
         if a >= len(selected_entries) or b >= len(selected_entries):
             skipped.append((rec["file"], "capture-set index out of range"))
             continue
+        if b < a:
+            # The closing pair of a full revolution. The capture ends at the
+            # last frame, so nothing was held out between it and the first.
+            skipped.append((rec["file"], "wraparound pair — no held-out frames across the seam"))
+            continue
 
         src_a = selected_entries[a]["source_index"]
         src_b = selected_entries[b]["source_index"]
