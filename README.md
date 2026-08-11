@@ -14,6 +14,7 @@ Win Yu Maung · Myat Bhone Thet · Min Pyae Hein
 | Stage | State |
 |---|---|
 | Capture | Not started |
+| Pipeline runner | Implemented — one command, end to end |
 | Frame extraction | Implemented — awaiting capture |
 | Correspondence + interpolation | Implemented — awaiting capture |
 | Viewer | Implemented — awaiting frames |
@@ -30,33 +31,45 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Pipeline
+## Running it
+
+Put the capture in `data/raw/` — a folder of photographs, or the walkaround video — and run:
 
 ```bash
-# 1. every frame of the walk -> ground truth pool
-python src/extract_frames.py   --input data/raw/walk.mov  --out data/frames/
-
-# 2. subsample to the capture set (every 15th frame here)
-python src/extract_frames.py   --input data/frames/       --out data/selected/ --every 15
-
-# 3. check adjacent frames are close enough to interpolate
-python src/match_features.py   --frames data/selected/    --out output/matches.json
-
-# 4. synthesize 2 in-between views per pair
-python src/interpolate.py      --frames data/selected/    --out output/sequence/ --n-between 2
-
-# 5. order + tag frames for the viewer
-python src/build_sequence.py   --frames output/sequence/  --out viewer/manifest.json --angular-step 12
-
-# 6. score synthesized frames against the real held-out ones
-python src/evaluate.py         --synth output/sequence/ --truth data/frames/ --out output/metrics/
+python run_pipeline.py --angular-step 12
 ```
 
-Then open `viewer/index.html` — drag to rotate, `B` toggles the captured-only baseline.
+That's the whole workflow. It finds the capture, runs every stage in order, and leaves
+`viewer/index.html` ready to open. Drag to rotate; `B` toggles the captured-only baseline.
 
-If you shot stills rather than video, drop them into `data/selected/` and start at step 3. Hold-out
-evaluation needs the dense video capture, since it scores against frames that were deliberately
-withheld.
+```bash
+python run_pipeline.py --every 15          # hold frames out so PSNR/SSIM can be measured
+python run_pipeline.py --resume            # skip stages already done
+python run_pipeline.py --from interpolate  # re-run the tail after tuning flow parameters
+python run_pipeline.py --dry-run           # print the commands, run nothing
+```
+
+Pass `--angular-step` with the step you actually measured while shooting. Without it the viewer
+shows frame indices instead of angles — the pipeline will not guess a capture step.
+
+**Evaluation needs frames held back.** With 30 photographs and nothing withheld there is no ground
+truth, so `evaluate.py` is skipped and says so. To get real numbers, shoot the walk as video (or
+dense stills) and use `--every 15`: every 15th frame becomes the capture set and the other 14 are
+scored against.
+
+### Stages individually
+
+`run_pipeline.py` only sequences these, and prints each command as it goes, so any stage can be
+lifted out and re-run by hand while tuning:
+
+```bash
+python src/extract_frames.py   --input data/raw/walk.mov  --out data/frames/
+python src/extract_frames.py   --input data/frames/       --out data/selected/ --every 15
+python src/match_features.py   --frames data/selected/    --out output/matches.json
+python src/interpolate.py      --frames data/selected/    --out output/sequence/ --n-between 2
+python src/build_sequence.py   --frames output/sequence/  --out viewer/manifest.json --angular-step 12
+python src/evaluate.py         --synth output/sequence/ --truth data/frames/ --out output/metrics/
+```
 
 ## How the stages fit together
 
