@@ -1,7 +1,17 @@
-data/raw/
-data/frames/
-data/selected/
-output/sequence/
+# Capture data and generated frames — large, regenerable, never committed.
+# The directories themselves are kept (.gitkeep) so a fresh clone has the tree.
+data/raw/*
+data/frames/*
+data/selected/*
+output/sequence/*
+!data/raw/.gitkeep
+!data/frames/.gitkeep
+!data/selected/.gitkeep
+!output/sequence/.gitkeep
+
+# output/metrics/ is deliberately NOT ignored — measured CSVs are the only
+# source for numbers in the paper, so they are versioned.
+
 *.mov
 *.mp4
 *.MOV
