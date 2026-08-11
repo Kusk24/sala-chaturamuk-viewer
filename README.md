@@ -31,12 +31,33 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Capture
+
+Walk the safely accessible land-side arc at a roughly constant distance and camera height, phone
+at **1x, landscape**, pointed at the pavilion's centre. Target **5–8° between adjacent
+photographs**. Lock **exposure, white balance and focus** manually so nothing flickers or refocuses
+between frames. Shoot under overcast or consistently shaded light, and keep pedestrians, vehicles,
+moving vegetation and changing water reflections out of frame where you can.
+
+**Write these down on site — none of them can be recovered afterwards:**
+
+| | |
+|---|---|
+| Start angle | angle of the first photograph |
+| End angle | angle of the last photograph |
+| Total accessible arc | how much of the circle you actually covered |
+| Photograph count | how many you took |
+| Whether the arc closed | did you genuinely get all the way round? |
+
+Mean angular spacing is derived from these, so it does not need measuring separately. These
+measured values replace every assumed figure in the paper.
+
 ## Running it
 
 Put the capture in `data/raw/` — a folder of photographs, or the walkaround video — and run:
 
 ```bash
-python run_pipeline.py --angular-step 12
+python run_pipeline.py --start-angle 0 --end-angle 214
 ```
 
 That's the whole workflow. It finds the capture, runs every stage in order, and leaves
@@ -44,13 +65,20 @@ That's the whole workflow. It finds the capture, runs every stage in order, and 
 
 ```bash
 python run_pipeline.py --every 15          # hold frames out so PSNR/SSIM can be measured
+python run_pipeline.py --wraparound        # ONLY if a full revolution was genuinely walked
 python run_pipeline.py --resume            # skip stages already done
 python run_pipeline.py --from interpolate  # re-run the tail after tuning flow parameters
 python run_pipeline.py --dry-run           # print the commands, run nothing
 ```
 
-Pass `--angular-step` with the step you actually measured while shooting. Without it the viewer
-shows frame indices instead of angles — the pipeline will not guess a capture step.
+Give it the arc you measured (`--start-angle` / `--end-angle`) and the mean angular step is derived
+against the real frame count rather than assumed uniform. `--angular-step` still accepts a nominal
+step if that's all you have. With neither, the viewer shows frame indices instead of angles — the
+pipeline will not guess an arc.
+
+The `sequence` stage prints the four values Table I of the paper is waiting on — displayed frames
+and mean angular step, for the baseline and the interpolated sequence — all derived from your
+measurement.
 
 **Evaluation needs frames held back.** With 30 photographs and nothing withheld there is no ground
 truth, so `evaluate.py` is skipped and says so. To get real numbers, shoot the walk as video (or
@@ -67,7 +95,7 @@ python src/extract_frames.py   --input data/raw/walk.mov  --out data/frames/
 python src/extract_frames.py   --input data/frames/       --out data/selected/ --every 15
 python src/match_features.py   --frames data/selected/    --out output/matches.json
 python src/interpolate.py      --frames data/selected/    --out output/sequence/ --n-between 2
-python src/build_sequence.py   --frames output/sequence/  --out viewer/manifest.json --angular-step 12
+python src/build_sequence.py   --frames output/sequence/  --out viewer/manifest.json --start-angle 0 --end-angle 214
 python src/evaluate.py         --synth output/sequence/ --truth data/frames/ --out output/metrics/
 ```
 
@@ -98,8 +126,9 @@ with different `--every` values and pass `--append-summary`.
 
 ## Notes
 
-- The lake bounds the capture path — this is a **partial arc**, not a full 360° orbit. Nothing in
-  the pipeline or viewer wraps around.
+- The lake bounds the capture path, so this is normally a **partial arc**, not a full 360° orbit.
+  Nothing wraps around unless you pass `--wraparound`, which you should only do if a full
+  revolution was genuinely walked. A partial arc that pretends to loop tears at the seam.
 - The pavilion is four-fold symmetric; feature matching is restricted to adjacent frames to avoid
   false correspondences between faces. `match_features.py --symmetry-stride K` deliberately matches
   across that gap to measure the effect.

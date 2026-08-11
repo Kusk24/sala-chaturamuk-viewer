@@ -10,7 +10,7 @@ The deliverable is an interactive web viewer that lets a user rotate around the 
 in-between viewpoints are **synthesized from photographs** rather than rendered from geometry.
 
 Team: Win Yu Maung, Myat Bhone Thet, Min Pyae Hein.
-The paper draft lives at `paper/CSX4213_Thai_Sala.docx`.
+The paper draft lives at `paper/CSX4213_Sala_Thai.docx`.
 
 ---
 
@@ -40,7 +40,10 @@ warping and cross-dissolve, object-movie frame sequencing.
 
 ## Pipeline
 
-1. **Capture** — photographs (or 4K60 video walked along an arc) around the pavilion.
+1. **Capture** — photographs (or video walked along an arc) around the pavilion. Phone at 1x in
+   landscape, constant distance and height, aimed at the pavilion's centre, targeting 5–8° between
+   adjacent shots, with exposure/white balance/focus locked. Start angle, end angle, total arc and
+   photograph count are recorded on site; every angle downstream derives from those measurements.
 2. **Frame extraction / selection** — if video, extract frames and subsample to a capture set.
 3. **Correspondence** — SIFT keypoints matched between *adjacent* frames only, RANSAC-filtered.
 4. **Interpolation** — dense optical flow (Farneback baseline) between adjacent pairs; forward-warp
@@ -51,9 +54,11 @@ warping and cross-dissolve, object-movie frame sequencing.
 
 ### Two site-specific problems to respect
 
-- **Partial arc.** The pavilion sits at the edge of the campus lake. A full 360° walkaround on foot
-  is not possible. The pipeline must handle a **partial arc** and must not assume wraparound. Do not
-  hardcode 360° or assume `frame[n]` neighbours `frame[0]`.
+- **Partial arc.** The pavilion sits at the edge of the campus lake, and site boundaries may prevent
+  a continuous constant-radius path around all four sides. The pipeline represents the **measured
+  accessible arc** and must not assume wraparound. Do not hardcode 360° or assume `frame[n]`
+  neighbours `frame[0]`. The last frame is joined back to the first only when `--wraparound` is
+  passed, which is only legitimate if a full revolution was genuinely walked.
 - **Four-fold symmetry.** "Chaturamuk" means four-faced; views ~90° apart look nearly identical.
   This causes **false feature matches between different faces**. Always restrict matching to adjacent
   frames and filter with RANSAC. Never match globally across the whole set.
@@ -118,7 +123,7 @@ sala-chaturamuk-viewer/
 │   ├── sequence/          # final ordered frames + interpolation.json
 │   └── metrics/           # PSNR/SSIM CSVs (committed — these feed the paper)
 └── paper/
-    └── CSX4213_Thai_Sala.docx
+    └── CSX4213_Sala_Thai.docx
 ```
 
 The `index.json` / `interpolation.json` files are how stages hand context to each other — in
