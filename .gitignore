@@ -9,8 +9,15 @@ output/sequence/*
 !data/selected/.gitkeep
 !output/sequence/.gitkeep
 
+# Regenerated on every run, and pointing at frames that are ignored above.
+viewer/manifest.json
+viewer/manifest.js
+output/debug/
+
 # output/metrics/ is deliberately NOT ignored — measured CSVs are the only
-# source for numbers in the paper, so they are versioned.
+# source for numbers in the paper, so they are versioned. output/matches.json
+# and output/pipeline_run.json are kept for the same reason: they record what
+# was measured and with which parameters.
 
 *.mov
 *.mp4
