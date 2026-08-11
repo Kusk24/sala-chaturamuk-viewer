@@ -4,8 +4,10 @@
 // in-between views produced by src/interpolate.py -- there is no 3D model here,
 // nothing is rendered, we only choose which frame to show.
 //
-// The capture is a PARTIAL ARC (the lake blocks the far side), so the ends are
-// clamped: dragging past either end stops rather than wrapping to the start.
+// The capture is normally a PARTIAL ARC (the lake blocks the far side), so the
+// ends are clamped: dragging past either end stops rather than wrapping to the
+// start. The manifest sets wraparound: true only when a full revolution was
+// genuinely walked, and then rotation loops instead.
 
 (function () {
   "use strict";
@@ -66,7 +68,9 @@
 
   function show(index) {
     if (!active.length) return;
-    position = Math.max(0, Math.min(active.length - 1, index)); // clamp: partial arc
+    position = manifest && manifest.wraparound
+      ? ((index % active.length) + active.length) % active.length  // closed revolution
+      : Math.max(0, Math.min(active.length - 1, index));           // partial arc: clamp
     var frame = active[position];
     els.image.src = frame.file;
     els.counter.textContent = (position + 1) + " / " + active.length +
@@ -160,7 +164,12 @@
     }
     document.getElementById("summary").textContent =
       manifest.n_captured + " captured, " + manifest.n_synthesized + " synthesized" +
-      (manifest.angular_step_deg ? ", " + manifest.angular_step_deg + "° capture step" : "");
+      (manifest.total_arc_deg ? ", " + manifest.total_arc_deg + "° arc" : "") +
+      (manifest.angular_step_deg ? ", " + manifest.angular_step_deg.toFixed(1) + "° mean step" : "");
+    document.getElementById("arc-note").textContent = manifest.wraparound
+      ? "A full revolution was walked, so rotation loops continuously."
+      : "The capture is a partial arc — the lake blocks the far side of the pavilion — so " +
+        "rotation stops at both ends rather than looping.";
     setMode(true);
     preload(manifest.frames);
   }).catch(function (error) {
