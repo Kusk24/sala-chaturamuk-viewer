@@ -1,0 +1,133 @@
+# Sala Viewer — Project Instructions
+
+## What this is
+
+A Computer Vision term project (CSX4213 / ITX4283, Assumption University of Thailand) implementing
+**image-based rendering (IBR)** for Sala Chaturamuk Phaichit, the four-porched Thai pavilion on the
+Suvarnabhumi campus.
+
+The deliverable is an interactive web viewer that lets a user rotate around the pavilion, where the
+in-between viewpoints are **synthesized from photographs** rather than rendered from geometry.
+
+Team: Win Yu Maung, Myat Bhone Thet, Min Pyae Hein.
+The paper draft lives at `paper/CSX4213_Sala_Viewer_Draft.docx`.
+
+---
+
+## The hard constraint — read this before proposing any approach
+
+This project follows **Szeliski, *Computer Vision: Algorithms and Applications*, Chapter 14
+(Image-Based Rendering)**. The academic point is synthesizing novel views **without recovering
+explicit 3D geometry**.
+
+**Do not** propose, scaffold, or implement:
+
+- COLMAP / OpenMVG / Meshroom or any full structure-from-motion + MVS reconstruction
+- Photogrammetry producing a mesh or textured 3D model
+- NeRF, Gaussian splatting, or any learned radiance-field method
+- Anything that outputs a point cloud or mesh as the rendering primitive
+
+These are all *better* at making a nice 3D demo. They are **out of scope** and would invalidate the
+project's framing. If a task seems to call for one, say so and stop — do not substitute silently.
+
+Feature matching (SIFT/ORB) is used **only** to establish 2D correspondences between adjacent frames
+for warping. It is not a step toward reconstruction.
+
+**In scope:** view interpolation (Chen & Williams), view morphing (Seitz & Dyer), optical-flow-based
+warping and cross-dissolve, object-movie frame sequencing.
+
+---
+
+## Pipeline
+
+1. **Capture** — photographs (or 4K60 video walked along an arc) around the pavilion.
+2. **Frame extraction / selection** — if video, extract frames and subsample to a capture set.
+3. **Correspondence** — SIFT keypoints matched between *adjacent* frames only, RANSAC-filtered.
+4. **Interpolation** — dense optical flow (Farneback baseline) between adjacent pairs; forward-warp
+   and cross-dissolve to synthesize intermediate views.
+5. **Sequencing** — order real + synthesized frames by angle, export as an indexed sequence.
+6. **Viewer** — drag-to-rotate web viewer over that sequence.
+7. **Evaluation** — see below.
+
+### Two site-specific problems to respect
+
+- **Partial arc.** The pavilion sits at the edge of the campus lake. A full 360° walkaround on foot
+  is not possible. The pipeline must handle a **partial arc** and must not assume wraparound. Do not
+  hardcode 360° or assume `frame[n]` neighbours `frame[0]`.
+- **Four-fold symmetry.** "Chaturamuk" means four-faced; views ~90° apart look nearly identical.
+  This causes **false feature matches between different faces**. Always restrict matching to adjacent
+  frames and filter with RANSAC. Never match globally across the whole set.
+
+---
+
+## Evaluation — how we get real numbers
+
+Preferred method (requires video capture): **hold-out validation.**
+
+1. Extract all frames from the walk.
+2. Subsample every Nth frame → "captured set".
+3. Interpolate between captured frames.
+4. Compare synthesized frames against the **real held-out frames** at those angles.
+5. Report **PSNR** and **SSIM**, and plot error against angular spacing.
+
+This turns the paper's subjective smoothness rating into a real measurement. Write metrics to
+`output/metrics/` as CSV so they can go straight into the paper's Table I.
+
+---
+
+## Rules for writing results
+
+**Never invent, estimate, or placeholder a number as if it were measured.** No example PSNR values,
+no "typical" SSIM, no illustrative timings. If a metric hasn't been computed from real data, leave
+it explicitly empty or `TBD`.
+
+This applies to code comments, README tables, notebook markdown, and any text written toward the
+paper. The paper currently carries `[To record]` markers exactly for this reason — they get replaced
+by measured output, never by plausible-sounding prose.
+
+If asked to "fill in" results, produce the script that computes them instead.
+
+---
+
+## Structure
+
+```
+sala-viewer/
+├── CLAUDE.md
+├── README.md
+├── requirements.txt
+├── data/
+│   ├── raw/          # source video / original photos (gitignored — large)
+│   ├── frames/       # extracted frames
+│   └── selected/     # subsampled capture set
+├── src/
+│   ├── extract_frames.py
+│   ├── match_features.py
+│   ├── interpolate.py
+│   ├── build_sequence.py
+│   └── evaluate.py
+├── viewer/
+│   ├── index.html
+│   └── app.js
+├── output/
+│   ├── sequence/     # final ordered frames
+│   └── metrics/      # PSNR/SSIM CSVs
+└── paper/
+    └── CSX4213_Sala_Viewer_Draft.docx
+```
+
+## Conventions
+
+- Python 3.11+, OpenCV (`opencv-python`), NumPy, scikit-image (for SSIM).
+- Each `src/` script is runnable standalone with argparse; no notebook-only logic.
+- Frames named zero-padded by index: `frame_0042.jpg`. Synthesized frames carry a suffix
+  (`frame_0042_i1.jpg`) so real and synthetic are always distinguishable on disk.
+- Viewer is vanilla HTML/JS — no build step, no framework. It must open from `file://`.
+- Do not commit anything in `data/raw/`.
+
+## Working style
+
+- Ask before adding a dependency.
+- Prefer small, inspectable steps over one large pipeline script — each stage's output should be
+  visually checkable.
+- When something can't be done within the IBR constraint, say so plainly rather than working around it.

@@ -1,0 +1,11 @@
+data/raw/
+data/frames/
+data/selected/
+output/sequence/
+*.mov
+*.mp4
+*.MOV
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
