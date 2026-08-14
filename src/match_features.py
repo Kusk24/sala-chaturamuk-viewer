@@ -40,6 +40,34 @@ def list_frames(directory):
     )
 
 
+def ransac_mask(src, dst, args):
+    """RANSAC outlier mask. Returns (mask, model_actually_used).
+
+    The fundamental matrix is the honest model while walking an arc, because
+    the motion produces real parallax. But it is degenerate when the matched
+    points are near-coplanar or the camera barely translates -- a flat facade
+    shot head-on, or a stretch where you pivoted more than you walked. OpenCV
+    does not fail gracefully there: it raises. So catch that and fall back to a
+    homography, which is the correct model for exactly those cases, and record
+    which one was used per pair.
+    """
+    order = ["homography"] if args.model == "homography" else ["fundamental", "homography"]
+    for model in order:
+        try:
+            if model == "fundamental":
+                matrix, mask = cv2.findFundamentalMat(
+                    src, dst, cv2.FM_RANSAC, args.ransac_thresh, 0.99)
+            else:
+                matrix, mask = cv2.findHomography(src, dst, cv2.RANSAC, args.ransac_thresh)
+        except cv2.error:
+            continue
+        if matrix is None or mask is None or len(mask) != len(src):
+            continue
+        degenerate = model != order[0]
+        return mask.ravel().astype(bool), model + (" (fell back)" if degenerate else "")
+    return None, "none succeeded"
+
+
 def match_pair(sift, flann, gray_a, gray_b, args):
     """SIFT + Lowe ratio test + RANSAC. Returns a stats dict and the inlier mask."""
     kp_a, des_a = sift.detectAndCompute(gray_a, None)
@@ -51,6 +79,7 @@ def match_pair(sift, flann, gray_a, gray_b, args):
         "good_matches": 0,
         "inliers": 0,
         "inlier_ratio": 0.0,
+        "model_used": None,
     }
     if des_a is None or des_b is None or len(kp_a) < 2 or len(kp_b) < 2:
         return stats, kp_a, kp_b, []
@@ -71,18 +100,11 @@ def match_pair(sift, flann, gray_a, gray_b, args):
     src = np.float32([kp_a[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
     dst = np.float32([kp_b[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
 
-    if args.model == "homography":
-        # Valid only if the scene were planar or the camera purely rotating.
-        _, mask = cv2.findHomography(src, dst, cv2.RANSAC, args.ransac_thresh)
-    else:
-        # Walking an arc induces real parallax, so epipolar geometry is the
-        # honest outlier model here.
-        _, mask = cv2.findFundamentalMat(src, dst, cv2.FM_RANSAC, args.ransac_thresh, 0.99)
-
+    mask, model_used = ransac_mask(src, dst, args)
+    stats["model_used"] = model_used
     if mask is None:
         return stats, kp_a, kp_b, good
 
-    mask = mask.ravel().astype(bool)
     stats["inliers"] = int(mask.sum())
     stats["inlier_ratio"] = round(float(mask.sum()) / len(good), 4)
     return stats, kp_a, kp_b, [m for m, keep in zip(good, mask) if keep]
@@ -184,6 +206,10 @@ def main():
     counts = [pr["inliers"] for pr in pairs]
     print(f"\n{len(pairs)} adjacent pairs -> {args.out}")
     print(f"  inliers: min {min(counts)}, median {int(np.median(counts))}, max {max(counts)}")
+    fell_back = sum(1 for pr in pairs if (pr["model_used"] or "").endswith("(fell back)"))
+    if fell_back:
+        print(f"  note: {fell_back}/{len(pairs)} pairs used a homography instead — near-planar "
+              f"view, or you pivoted more than you walked across those frames")
     for msg in warnings:
         print(f"  WARNING: {msg}")
 
