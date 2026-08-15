@@ -80,6 +80,8 @@ def match_pair(sift, flann, gray_a, gray_b, args):
         "inliers": 0,
         "inlier_ratio": 0.0,
         "model_used": None,
+        "median_disp_px": None,
+        "median_disp_pct": None,
     }
     if des_a is None or des_b is None or len(kp_a) < 2 or len(kp_b) < 2:
         return stats, kp_a, kp_b, []
@@ -107,6 +109,21 @@ def match_pair(sift, flann, gray_a, gray_b, args):
 
     stats["inliers"] = int(mask.sum())
     stats["inlier_ratio"] = round(float(mask.sum()) / len(good), 4)
+
+    # How far the scene actually moves between these two frames, as a fraction
+    # of frame width. This -- not the inlier count -- is what predicts whether
+    # interpolate.py can produce a real in-between view.
+    #
+    # SIFT is designed to be robust to large viewpoint change, so two frames
+    # 30 degrees apart can still return a thousand confident inliers. Dense
+    # optical flow has no such robustness: past roughly a tenth of the frame
+    # width it stops finding the correspondence at all, the warp collapses to
+    # no-op, and the cross-dissolve blends two unaligned images into a ghost.
+    # A high inlier count therefore does NOT mean a pair is interpolatable.
+    disp = np.linalg.norm(src[mask] - dst[mask], axis=2).ravel()
+    median_disp = float(np.median(disp))
+    stats["median_disp_px"] = round(median_disp, 1)
+    stats["median_disp_pct"] = round(100.0 * median_disp / gray_a.shape[1], 2)
     return stats, kp_a, kp_b, [m for m, keep in zip(good, mask) if keep]
 
 
@@ -120,6 +137,10 @@ def main():
     p.add_argument("--ransac-thresh", type=float, default=3.0, help="RANSAC reprojection threshold in px")
     p.add_argument("--min-inliers", type=int, default=30,
                    help="warn below this many inliers per adjacent pair (default: 30)")
+    p.add_argument("--max-displacement", type=float, default=8.0,
+                   help="warn when the scene moves more than this %% of frame width between "
+                        "adjacent frames — past it, optical flow ghosts instead of warping "
+                        "(default: 8)")
     p.add_argument("--debug-dir", default=None, help="if set, write match visualisations here")
     p.add_argument("--symmetry-stride", type=int, default=None,
                    help="also match each frame against frame i+STRIDE to measure false "
@@ -159,12 +180,19 @@ def main():
 
         flag = ""
         if stats["inliers"] < args.min_inliers:
-            msg = (f"{a} -> {b}: only {stats['inliers']} inliers "
-                   f"(< {args.min_inliers}); angular gap is probably too large to interpolate")
-            warnings.append(msg)
-            flag = "  <-- WEAK"
-        print(f"[{i:3d}] {a} -> {b}: {stats['good_matches']:4d} good, "
-              f"{stats['inliers']:4d} inliers ({stats['inlier_ratio']:.2f}){flag}")
+            warnings.append(f"{a} -> {b}: only {stats['inliers']} inliers "
+                            f"(< {args.min_inliers}); these frames barely match at all")
+            flag = "  <-- WEAK MATCH"
+        elif (stats["median_disp_pct"] or 0) > args.max_displacement:
+            warnings.append(
+                f"{a} -> {b}: scene moves {stats['median_disp_pct']:.1f}% of frame width "
+                f"(> {args.max_displacement}%). SIFT still matches these, but optical flow "
+                f"will not track that far — expect a ghosted blend, not a synthesized view. "
+                f"Shoot this stretch of the arc closer together.")
+            flag = "  <-- TOO FAR APART"
+        disp = stats["median_disp_pct"]
+        print(f"[{i:3d}] {a} -> {b}: {stats['inliers']:5d} inliers, scene moves "
+              f"{'   n/a' if disp is None else f'{disp:5.1f}%'} of width{flag}")
 
         if args.debug_dir:
             vis = cv2.drawMatches(
