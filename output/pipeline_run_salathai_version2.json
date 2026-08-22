@@ -1,0 +1,34 @@
+{
+  "input": "data/raw_versions/salathai_version2",
+  "kind": "stills",
+  "every": 1,
+  "holdout": false,
+  "n_between": 2,
+  "angular_step_deg": null,
+  "start_angle_deg": 0.0,
+  "end_angle_deg": null,
+  "wraparound": false,
+  "width": 1600,
+  "stages_run": [
+    "extract",
+    "match",
+    "interpolate",
+    "sequence"
+  ],
+  "stages_skipped": [
+    {
+      "stage": "subsample",
+      "reason": "nothing held out (--every 1), capture set is the full input"
+    },
+    {
+      "stage": "evaluate",
+      "reason": "no held-out frames to score against \u2014 re-run with --every 15 or higher"
+    }
+  ],
+  "seconds": {
+    "extract": 10.71,
+    "match": 87.21,
+    "interpolate": 82.87,
+    "sequence": 0.07
+  }
+}
