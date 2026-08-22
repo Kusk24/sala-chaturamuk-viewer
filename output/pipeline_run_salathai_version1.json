@@ -9,32 +9,26 @@
   "end_angle_deg": null,
   "wraparound": false,
   "width": 1600,
-  "stages_run": [],
+  "stages_run": [
+    "extract",
+    "match",
+    "interpolate",
+    "sequence"
+  ],
   "stages_skipped": [
-    {
-      "stage": "extract",
-      "reason": "already done"
-    },
     {
       "stage": "subsample",
       "reason": "nothing held out (--every 1), capture set is the full input"
-    },
-    {
-      "stage": "match",
-      "reason": "already done"
-    },
-    {
-      "stage": "interpolate",
-      "reason": "already done"
-    },
-    {
-      "stage": "sequence",
-      "reason": "already done"
     },
     {
       "stage": "evaluate",
       "reason": "no held-out frames to score against \u2014 re-run with --every 15 or higher"
     }
   ],
-  "seconds": {}
+  "seconds": {
+    "extract": 20.73,
+    "match": 148.95,
+    "interpolate": 157.41,
+    "sequence": 0.07
+  }
 }

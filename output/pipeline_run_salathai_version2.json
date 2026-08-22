@@ -26,9 +26,9 @@
     }
   ],
   "seconds": {
-    "extract": 10.71,
-    "match": 87.21,
-    "interpolate": 82.87,
+    "extract": 11.42,
+    "match": 91.92,
+    "interpolate": 110.8,
     "sequence": 0.07
   }
 }

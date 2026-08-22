@@ -86,12 +86,20 @@ def main():
                    help="also interpolate from the last captured frame back to the first. Only "
                         "pass this if a full revolution was genuinely walked")
     # Farneback parameters, exposed so they can be tuned against the roof tiling.
+    # Defaults raised from OpenCV's stock example values (levels=3, winsize=15,
+    # iterations=3, poly_n=5, poly_sigma=1.2): at those settings even pairs well
+    # under the displacement threshold showed visible double-exposure ghosting on
+    # thin high-contrast structures (the tower, roof finials against open sky) --
+    # the flow field there was too noisy to lock on. Larger winsize/poly_n and
+    # more levels/iterations trade compute (~1.5x) for a flow field that tracks
+    # those structures instead of guessing, confirmed by side-by-side comparison
+    # on both a flagged and a non-flagged pair from salathai_version2.
     p.add_argument("--pyr-scale", type=float, default=0.5)
-    p.add_argument("--levels", type=int, default=3)
-    p.add_argument("--winsize", type=int, default=15)
-    p.add_argument("--iterations", type=int, default=3)
-    p.add_argument("--poly-n", type=int, default=5)
-    p.add_argument("--poly-sigma", type=float, default=1.2)
+    p.add_argument("--levels", type=int, default=5)
+    p.add_argument("--winsize", type=int, default=25)
+    p.add_argument("--iterations", type=int, default=5)
+    p.add_argument("--poly-n", type=int, default=7)
+    p.add_argument("--poly-sigma", type=float, default=1.5)
     args = p.parse_args()
 
     if args.n_between < 0:
