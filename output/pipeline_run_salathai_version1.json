@@ -1,5 +1,5 @@
 {
-  "input": "data/raw",
+  "input": "data/raw_versions/salathai_version1",
   "kind": "stills",
   "every": 1,
   "holdout": false,
@@ -9,26 +9,32 @@
   "end_angle_deg": null,
   "wraparound": false,
   "width": 1600,
-  "stages_run": [
-    "extract",
-    "match",
-    "interpolate",
-    "sequence"
-  ],
+  "stages_run": [],
   "stages_skipped": [
+    {
+      "stage": "extract",
+      "reason": "already done"
+    },
     {
       "stage": "subsample",
       "reason": "nothing held out (--every 1), capture set is the full input"
+    },
+    {
+      "stage": "match",
+      "reason": "already done"
+    },
+    {
+      "stage": "interpolate",
+      "reason": "already done"
+    },
+    {
+      "stage": "sequence",
+      "reason": "already done"
     },
     {
       "stage": "evaluate",
       "reason": "no held-out frames to score against \u2014 re-run with --every 15 or higher"
     }
   ],
-  "seconds": {
-    "extract": 19.04,
-    "match": 143.28,
-    "interpolate": 95.88,
-    "sequence": 0.08
-  }
+  "seconds": {}
 }

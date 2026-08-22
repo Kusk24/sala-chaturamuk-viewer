@@ -1,10 +1,17 @@
 # Capture data and generated frames — large, regenerable, never committed.
 # The directories themselves are kept (.gitkeep) so a fresh clone has the tree.
+# The _* patterns cover --version-name runs (data/selected_myversion/, etc.)
+# and data/raw_versions/*/ covers every archived capture under its own name.
 data/raw/*
+data/raw_versions/*/*
 data/frames/*
+data/frames_*/*
 data/selected/*
+data/selected_*/*
 output/sequence/*
+output/sequence_*/*
 !data/raw/.gitkeep
+!data/raw_versions/.gitkeep
 !data/frames/.gitkeep
 !data/selected/.gitkeep
 !output/sequence/.gitkeep
@@ -12,12 +19,15 @@ output/sequence/*
 # Regenerated on every run, and pointing at frames that are ignored above.
 viewer/manifest.json
 viewer/manifest.js
+viewer/manifest_*.json
+viewer/manifest_*.js
 output/debug/
 
-# output/metrics/ is deliberately NOT ignored — measured CSVs are the only
-# source for numbers in the paper, so they are versioned. output/matches.json
-# and output/pipeline_run.json are kept for the same reason: they record what
-# was measured and with which parameters.
+# output/metrics*/ is deliberately NOT ignored — measured CSVs are the only
+# source for numbers in the paper, so they are versioned. output/matches*.json,
+# output/pipeline_run*.json, and viewer/versions.json(.js) are kept for the
+# same reason: they record what was measured, with which parameters, and
+# which named versions exist -- small facts, not the large data behind them.
 
 *.mov
 *.mp4

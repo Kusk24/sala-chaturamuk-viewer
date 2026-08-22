@@ -21,25 +21,64 @@
     mode: document.getElementById("mode"),
     progress: document.getElementById("progress"),
     bar: document.getElementById("bar"),
+    versions: document.getElementById("versions"),
   };
 
   var manifest = null;
   var active = [];        // frames for the current mode
   var position = 0;       // index into `active`
   var interpolated = true;
+  var currentVersion = null;
 
   function fail(message) {
     els.status.textContent = message;
     els.status.classList.add("error");
   }
 
-  function loadManifest() {
-    if (window.SALA_MANIFEST) return Promise.resolve(window.SALA_MANIFEST);
+  // Each captured session (data/raw_versions/<name>/) is a separate,
+  // independently-run manifest, kept apart so switching between them never
+  // mixes frames from two different walks. See run_pipeline.py --version-name.
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = function () { reject(new Error("could not load " + src)); };
+      document.head.appendChild(script);
+    });
+  }
+
+  function loadManifest(path) {
+    if (!path && window.SALA_MANIFEST) return Promise.resolve(window.SALA_MANIFEST);
     // Fallback for when the page is served over http(s). Browsers refuse this
-    // over file://, which is why build_sequence.py also emits manifest.js.
-    return fetch("manifest.json").then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
+    // over file://, which is why build_sequence.py also emits a .js twin.
+    if (window.fetch && location.protocol !== "file:") {
+      return fetch(path ? path.replace(/\.js$/, ".json") : "manifest.json").then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      });
+    }
+    return loadScript(path || "manifest.js").then(function () { return window.SALA_MANIFEST; });
+  }
+
+  function buildVersionSwitcher(versions, onSelect) {
+    if (!els.versions || !versions || versions.length < 2) return;
+    els.versions.hidden = false;
+    versions.forEach(function (v) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "version-btn";
+      btn.textContent = v.label + " (" + v.n_frames + ")";
+      btn.dataset.name = v.name;
+      btn.addEventListener("click", function () { onSelect(v); });
+      els.versions.appendChild(btn);
+    });
+  }
+
+  function markActiveVersion(name) {
+    if (!els.versions) return;
+    Array.prototype.forEach.call(els.versions.querySelectorAll(".version-btn"), function (btn) {
+      btn.classList.toggle("active", btn.dataset.name === name);
     });
   }
 
@@ -156,12 +195,16 @@
 
   // --- start -----------------------------------------------------------------
 
-  loadManifest().then(function (data) {
+  function activateManifest(data, versionName) {
     manifest = data;
+    currentVersion = versionName || null;
     if (!manifest.frames || !manifest.frames.length) {
       fail("Manifest contains no frames. Run src/build_sequence.py first.");
       return;
     }
+    els.progress.hidden = false;
+    els.bar.style.width = "0%";
+    els.status.classList.remove("error");
     document.getElementById("summary").textContent =
       manifest.n_captured + " captured, " + manifest.n_synthesized + " synthesized" +
       (manifest.total_arc_deg ? ", " + manifest.total_arc_deg + "° arc" : "") +
@@ -170,8 +213,38 @@
       ? "A full revolution was walked, so rotation loops continuously."
       : "The capture is a partial arc — the lake blocks the far side of the pavilion — so " +
         "rotation stops at both ends rather than looping.";
+    markActiveVersion(currentVersion);
     setMode(true);
     preload(manifest.frames);
+  }
+
+  function switchToVersion(v) {
+    els.status.textContent = "Loading " + v.label + "…";
+    loadManifest(v.manifest).then(function (data) {
+      activateManifest(data, v.name);
+    }).catch(function (error) {
+      fail("Could not load " + v.label + " (" + error.message + ").");
+    });
+  }
+
+  function loadVersionsList() {
+    if (window.SALA_VERSIONS) return Promise.resolve(window.SALA_VERSIONS.versions || []);
+    if (window.fetch && location.protocol !== "file:") {
+      return fetch("versions.json").then(function (r) { return r.ok ? r.json() : { versions: [] }; })
+        .then(function (d) { return d.versions || []; }).catch(function () { return []; });
+    }
+    return loadScript("versions.js").then(function () { return (window.SALA_VERSIONS || {}).versions || []; })
+      .catch(function () { return []; });
+  }
+
+  loadVersionsList().then(function (versions) {
+    if (versions.length >= 2) {
+      buildVersionSwitcher(versions, switchToVersion);
+      var first = versions[0];
+      return loadManifest(first.manifest).then(function (data) { activateManifest(data, first.name); });
+    }
+    // No registered versions (or just one) — behave exactly as a single-version viewer.
+    return loadManifest().then(function (data) { activateManifest(data, versions[0] && versions[0].name); });
   }).catch(function (error) {
     fail("Could not load the manifest (" + error.message + "). " +
          "Run:  python src/build_sequence.py --frames output/sequence/ --out viewer/manifest.json");

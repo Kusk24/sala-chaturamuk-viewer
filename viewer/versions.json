@@ -1,0 +1,12 @@
+{
+  "versions": [
+    {
+      "name": "salathai_version1",
+      "label": "Sala Thai Version1",
+      "manifest": "manifest_salathai_version1.js",
+      "n_captured": 206,
+      "n_synthesized": 410,
+      "n_frames": 616
+    }
+  ]
+}
