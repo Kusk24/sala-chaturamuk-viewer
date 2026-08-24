@@ -10,25 +10,17 @@
   "wraparound": false,
   "width": 1600,
   "stages_run": [
-    "extract",
-    "match",
     "interpolate",
     "sequence"
   ],
   "stages_skipped": [
-    {
-      "stage": "subsample",
-      "reason": "nothing held out (--every 1), capture set is the full input"
-    },
     {
       "stage": "evaluate",
       "reason": "no held-out frames to score against \u2014 re-run with --every 15 or higher"
     }
   ],
   "seconds": {
-    "extract": 11.42,
-    "match": 91.92,
-    "interpolate": 110.8,
-    "sequence": 0.07
+    "interpolate": 152.05,
+    "sequence": 0.12
   }
 }

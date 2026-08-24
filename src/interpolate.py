@@ -17,6 +17,15 @@ The warp, for output time t in (0, 1):
 At t=0 this is exactly A and at t=1 exactly B, so the sequence stays consistent
 with the captured frames at its endpoints.
 
+The dissolve weight is not constant across the frame (unless --blend dissolve).
+Wherever the two flow fields fail a forward-backward round trip — occlusions,
+and structures the flow mistracked — blending A and B just paints both copies
+on top of each other, which is exactly the double-exposure ghost. At those
+pixels the blend falls back to the temporally nearer photograph instead, so a
+pair the flow cannot bridge degrades to a clean cut rather than a ghost. The
+confidence comes from the same two flow fields already computed; no new
+correspondence machinery, still no geometry.
+
 Note on wording: the paper describes this as "forward warping". It is
 implemented as *backward* warping (cv2.remap pulls from the source) because
 forward scatter leaves unfilled holes wherever the flow diverges. The result is
@@ -69,10 +78,41 @@ def warp(img, flow, scale, grid_x, grid_y):
     return cv2.remap(img, map_x, map_y, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
 
 
-def interpolate_pair(img_a, img_b, flow_ab, flow_ba, t, grid_x, grid_y):
-    warped_a = warp(img_a, flow_ba, t, grid_x, grid_y)
-    warped_b = warp(img_b, flow_ab, 1.0 - t, grid_x, grid_y)
-    blended = (1.0 - t) * warped_a.astype(np.float32) + t * warped_b.astype(np.float32)
+def flow_consistency_mask(flow_fwd, flow_bwd, grid_x, grid_y, base_tol=1.5, rel_tol=0.05):
+    """True where flow_fwd survives a forward-backward round trip.
+
+    Follow flow_fwd from x, then flow_bwd from where it lands; a trustworthy
+    correspondence returns close to x. The tolerance grows with the flow
+    magnitude so long, correct flows are not penalised for small drift.
+    """
+    map_x = (grid_x + flow_fwd[..., 0]).astype(np.float32)
+    map_y = (grid_y + flow_fwd[..., 1]).astype(np.float32)
+    bwd_at_dest = cv2.remap(flow_bwd, map_x, map_y, cv2.INTER_LINEAR,
+                            borderMode=cv2.BORDER_REPLICATE)
+    roundtrip = np.linalg.norm(flow_fwd + bwd_at_dest, axis=2)
+    tolerance = base_tol + rel_tol * np.linalg.norm(flow_fwd, axis=2)
+    return roundtrip <= tolerance
+
+
+def interpolate_pair(img_a, img_b, flow_ab, flow_ba, t, grid_x, grid_y,
+                     conf_a=None, conf_b=None):
+    warped_a = warp(img_a, flow_ba, t, grid_x, grid_y).astype(np.float32)
+    warped_b = warp(img_b, flow_ab, 1.0 - t, grid_x, grid_y).astype(np.float32)
+    if conf_a is None:  # plain Chen & Williams cross-dissolve (--blend dissolve)
+        blended = (1.0 - t) * warped_a + t * warped_b
+        return np.clip(blended, 0, 255).astype(np.uint8)
+
+    # Carry each frame's consistency mask into the output frame the same way
+    # the frame itself travels there, take the pessimistic minimum, and feather
+    # so the dissolve/nearer-frame transition never shows a seam.
+    conf_at_t = np.minimum(
+        warp(conf_a.astype(np.float32), flow_ba, t, grid_x, grid_y),
+        warp(conf_b.astype(np.float32), flow_ab, 1.0 - t, grid_x, grid_y),
+    )
+    conf_at_t = cv2.GaussianBlur(conf_at_t, (0, 0), 7)
+    nearer_is_b = 1.0 if t > 0.5 else 0.0
+    weight_b = conf_at_t * t + (1.0 - conf_at_t) * nearer_is_b
+    blended = (1.0 - weight_b)[..., None] * warped_a + weight_b[..., None] * warped_b
     return np.clip(blended, 0, 255).astype(np.uint8)
 
 
@@ -85,6 +125,11 @@ def main():
     p.add_argument("--wraparound", action="store_true",
                    help="also interpolate from the last captured frame back to the first. Only "
                         "pass this if a full revolution was genuinely walked")
+    p.add_argument("--blend", choices=["confidence", "dissolve"], default="confidence",
+                   help="confidence (default): cross-dissolve only where the two flow fields "
+                        "agree on a round trip, elsewhere fall back to the nearer photograph "
+                        "so mistracked pixels cut instead of ghosting. dissolve: the plain "
+                        "fixed-weight cross-dissolve everywhere")
     # Farneback parameters, exposed so they can be tuned against the roof tiling.
     # Defaults raised from OpenCV's stock example values (levels=3, winsize=15,
     # iterations=3, poly_n=5, poly_sigma=1.2): at those settings even pairs well
@@ -133,13 +178,20 @@ def main():
         gray_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2GRAY)
         flow_ab = farneback(gray_a, gray_b, args)
         flow_ba = farneback(gray_b, gray_a, args)
+        conf_a = conf_b = inconsistent_pct = None
+        if args.blend == "confidence":
+            conf_a = flow_consistency_mask(flow_ab, flow_ba, grid_x, grid_y)
+            conf_b = flow_consistency_mask(flow_ba, flow_ab, grid_x, grid_y)
+            inconsistent_pct = round(100.0 * (1.0 - (conf_a.mean() + conf_b.mean()) / 2.0), 2)
         for k in range(1, args.n_between + 1):
             t = k / (args.n_between + 1)
-            out = interpolate_pair(img_a, img_b, flow_ab, flow_ba, t, grid_x, grid_y)
+            out = interpolate_pair(img_a, img_b, flow_ab, flow_ba, t, grid_x, grid_y,
+                                   conf_a, conf_b)
             name = f"frame_{i:04d}_i{k}.jpg"
             cv2.imwrite(os.path.join(args.out, name), out, [cv2.IMWRITE_JPEG_QUALITY, args.quality])
             records.append({"file": name, "kind": "synth", "source_file": None,
-                            "pair_a": i, "pair_b": (i + 1) % len(names), "t": round(t, 6)})
+                            "pair_a": i, "pair_b": (i + 1) % len(names), "t": round(t, 6),
+                            "flow_inconsistent_pct": inconsistent_pct})
 
     img_a = first
     # Adjacent pairs only. The capture is normally a partial arc, so by default
@@ -173,7 +225,10 @@ def main():
         "n_between": args.n_between,
         "n_total": len(records),
         "wraparound": args.wraparound,
-        "method": "farneback-flow view interpolation (backward warp + cross-dissolve)",
+        "method": "farneback-flow view interpolation (backward warp + "
+                  + ("consistency-weighted cross-dissolve)" if args.blend == "confidence"
+                     else "cross-dissolve)"),
+        "blend": args.blend,
         "farneback": {
             "pyr_scale": args.pyr_scale, "levels": args.levels, "winsize": args.winsize,
             "iterations": args.iterations, "poly_n": args.poly_n, "poly_sigma": args.poly_sigma,
