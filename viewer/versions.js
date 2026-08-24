@@ -23,8 +23,9 @@ window.SALA_VERSIONS = {
       "label": "Sala Thai Version2",
       "manifest": "manifest_salathai_version2.js",
       "n_captured": 146,
-      "n_synthesized": 290,
-      "n_frames": 436
+      "n_synthesized": 292,
+      "n_frames": 438,
+      "side": false
     },
     {
       "name": "stair_test",

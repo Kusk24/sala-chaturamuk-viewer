@@ -7,7 +7,7 @@
   "angular_step_deg": null,
   "start_angle_deg": 0.0,
   "end_angle_deg": null,
-  "wraparound": false,
+  "wraparound": true,
   "width": 1600,
   "stages_run": [
     "interpolate",
@@ -20,7 +20,7 @@
     }
   ],
   "seconds": {
-    "interpolate": 152.05,
-    "sequence": 0.12
+    "interpolate": 150.76,
+    "sequence": 0.06
   }
 }
