@@ -46,8 +46,9 @@ warping and cross-dissolve, object-movie frame sequencing.
    photograph count are recorded on site; every angle downstream derives from those measurements.
 2. **Frame extraction / selection** — if video, extract frames and subsample to a capture set.
 3. **Correspondence** — SIFT keypoints matched between *adjacent* frames only, RANSAC-filtered.
-4. **Interpolation** — dense optical flow (Farneback baseline) between adjacent pairs; forward-warp
-   and cross-dissolve to synthesize intermediate views.
+4. **Interpolation** — dense optical flow (Farneback baseline) between adjacent pairs; backward-warp
+   (cv2.remap, to avoid the holes forward scatter leaves) and cross-dissolve to synthesize
+   intermediate views.
 5. **Sequencing** — order real + synthesized frames by angle, export as an indexed sequence.
 6. **Viewer** — drag-to-rotate web viewer over that sequence.
 7. **Evaluation** — see below.
