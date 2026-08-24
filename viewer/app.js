@@ -193,6 +193,28 @@
     setMode(event.target.checked);
   });
 
+  // ◀ ▶ buttons: one frame per click, auto-repeat while held, so a demo can
+  // rotate smoothly hands-on-one-button instead of dragging.
+  function holdToStep(button, direction) {
+    var timer = null;
+    function step() { show(position + direction); }
+    function start(event) {
+      event.preventDefault();     // keep a touch press from also scrolling
+      step();
+      timer = setInterval(step, 40);   // ~25 frames/s while held
+    }
+    function stop() {
+      if (timer !== null) { clearInterval(timer); timer = null; }
+    }
+    button.addEventListener("mousedown", start);
+    button.addEventListener("touchstart", start, { passive: false });
+    ["mouseup", "mouseleave", "touchend", "touchcancel"].forEach(function (name) {
+      button.addEventListener(name, stop);
+    });
+  }
+  holdToStep(document.getElementById("step-back"), -1);
+  holdToStep(document.getElementById("step-fwd"), +1);
+
   // --- start -----------------------------------------------------------------
 
   function activateManifest(data, versionName) {
