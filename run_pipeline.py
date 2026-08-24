@@ -170,6 +170,10 @@ def main():
                    help="keep this run's outputs separate from others, under this name. Reads "
                         "from data/raw_versions/<name>/ by default and registers the result in "
                         "viewer/versions.json for the version-switcher UI")
+    p.add_argument("--no-register", action="store_true",
+                   help="process the version but keep it out of viewer/versions.json — for "
+                        "rehearsal/test captures that should not appear in the sala viewer's "
+                        "version switcher")
     args = p.parse_args()
 
     suffix = f"_{args.version_name}" if args.version_name else ""
@@ -299,7 +303,7 @@ def main():
     with open(run_record_path, "w") as fh:
         json.dump(record, fh, indent=2)
 
-    if args.version_name and os.path.exists(manifest):
+    if args.version_name and not args.no_register and os.path.exists(manifest):
         register_version(args.version_name, manifest)
 
     print("\n" + "-" * 60)
@@ -312,8 +316,10 @@ def main():
     print(f"\nParameters recorded in {rel(run_record_path)}")
     if os.path.exists(manifest):
         print(f"Open viewer/index.html to view the result.")
-        if args.version_name:
+        if args.version_name and not args.no_register:
             print(f"  registered as version {args.version_name!r} in viewer/versions.json")
+        elif args.version_name:
+            print(f"  kept out of the version switcher (--no-register)")
     if not holdout:
         print("No metrics measured: nothing was held out. Re-run with --every 15 for PSNR/SSIM.")
 
