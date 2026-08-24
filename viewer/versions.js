@@ -2,6 +2,15 @@
 window.SALA_VERSIONS = {
   "versions": [
     {
+      "name": "lamp_test",
+      "label": "Lamp Test",
+      "manifest": "manifest_lamp_test.js",
+      "n_captured": 22,
+      "n_synthesized": 42,
+      "n_frames": 64,
+      "side": true
+    },
+    {
       "name": "salathai_version1",
       "label": "Sala Thai Version1",
       "manifest": "manifest_salathai_version1.js",
@@ -16,6 +25,15 @@ window.SALA_VERSIONS = {
       "n_captured": 146,
       "n_synthesized": 290,
       "n_frames": 436
+    },
+    {
+      "name": "stair_test",
+      "label": "Stair Test",
+      "manifest": "manifest_stair_test.js",
+      "n_captured": 16,
+      "n_synthesized": 30,
+      "n_frames": 46,
+      "side": true
     }
   ]
 };

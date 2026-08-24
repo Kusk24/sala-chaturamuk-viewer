@@ -104,6 +104,26 @@
   }
   .step-btn:hover { border-color: var(--accent); color: var(--accent); }
   .step-btn:active { background: var(--accent); color: #14110f; }
+  #layout {
+    width: 100%; max-width: 1240px;
+    display: flex; gap: 18px; justify-content: center; align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  #primary { flex: 1 1 640px; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+  #primary #stage, #primary .controls { max-width: 1000px; }
+  #sidebar {
+    flex: 0 0 190px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  #sidebar h2 { margin: 0 0 4px; font-size: 12px; font-weight: 600; text-transform: uppercase;
+                letter-spacing: .06em; color: var(--muted); }
+  .side-note { margin: 0 0 10px; color: var(--muted); line-height: 1.4; }
+  #side-versions { display: flex; flex-direction: column; gap: 6px; }
+  #side-versions .version-btn { width: 100%; text-align: left; border-radius: 6px; }
   kbd {
     background: var(--panel); border: 1px solid var(--line); border-bottom-width: 2px;
     border-radius: 3px; padding: 1px 5px; font-size: 11px; font-family: inherit;
@@ -120,6 +140,8 @@
 
 <main>
   <div id="versions" hidden></div>
+  <div id="layout">
+  <div id="primary">
   <div id="stage">
     <img id="frame" alt="Sala Chaturamuk Phaichit">
     <div id="progress" hidden><div id="bar"></div></div>
@@ -137,6 +159,15 @@
       Interpolated frames
     </label>
   </div>
+  </div><!-- /primary -->
+
+  <aside id="sidebar" hidden>
+    <h2>Side captures</h2>
+    <p class="side-note">Rehearsal shots used to test the method — examples only,
+       not the pavilion arc.</p>
+    <div id="side-versions"></div>
+  </aside>
+  </div><!-- /layout -->
 </main>
 
 <footer>

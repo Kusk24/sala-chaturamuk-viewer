@@ -95,10 +95,11 @@ def discover_input(raw_dir):
     )
 
 
-def register_version(name, manifest_path):
+def register_version(name, manifest_path, side=False):
     """Add or update this version's entry in viewer/versions.json (+ .js twin,
     same file:// reason as manifest.json/.js: local fetch() is blocked, so the
-    viewer loads this as a script instead)."""
+    viewer loads this as a script instead). side=True marks a rehearsal/example
+    capture: the viewer lists it in its sidebar, not the main switcher."""
     with open(manifest_path) as fh:
         m = json.load(fh)
 
@@ -117,6 +118,7 @@ def register_version(name, manifest_path):
         "n_captured": m["n_captured"],
         "n_synthesized": m["n_synthesized"],
         "n_frames": m["n_frames"],
+        "side": bool(side),
     }
     versions["versions"] = [v for v in versions["versions"] if v["name"] != name] + [entry]
     versions["versions"].sort(key=lambda v: v["name"])
@@ -174,6 +176,9 @@ def main():
                    help="process the version but keep it out of viewer/versions.json — for "
                         "rehearsal/test captures that should not appear in the sala viewer's "
                         "version switcher")
+    p.add_argument("--side", action="store_true",
+                   help="register the version as a side example: the viewer lists it in a "
+                        "sidebar, visually separate from the main sala captures")
     args = p.parse_args()
 
     suffix = f"_{args.version_name}" if args.version_name else ""
@@ -304,7 +309,7 @@ def main():
         json.dump(record, fh, indent=2)
 
     if args.version_name and not args.no_register and os.path.exists(manifest):
-        register_version(args.version_name, manifest)
+        register_version(args.version_name, manifest, side=args.side)
 
     print("\n" + "-" * 60)
     for name, secs in timings:
@@ -317,7 +322,8 @@ def main():
     if os.path.exists(manifest):
         print(f"Open viewer/index.html to view the result.")
         if args.version_name and not args.no_register:
-            print(f"  registered as version {args.version_name!r} in viewer/versions.json")
+            where = "side example (viewer sidebar)" if args.side else "version"
+            print(f"  registered as {where} {args.version_name!r} in viewer/versions.json")
         elif args.version_name:
             print(f"  kept out of the version switcher (--no-register)")
     if not holdout:

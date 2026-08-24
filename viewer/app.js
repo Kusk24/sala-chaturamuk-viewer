@@ -22,6 +22,8 @@
     progress: document.getElementById("progress"),
     bar: document.getElementById("bar"),
     versions: document.getElementById("versions"),
+    sidebar: document.getElementById("sidebar"),
+    sideVersions: document.getElementById("side-versions"),
   };
 
   var manifest = null;
@@ -75,10 +77,29 @@
     });
   }
 
+  // Side captures (rehearsal/test shots) live in a sidebar, visually apart
+  // from the real sala versions, so a demo can show them as examples without
+  // implying they are part of the pavilion arc. See run_pipeline.py --side.
+  function buildSideList(versions, onSelect) {
+    if (!els.sidebar || !els.sideVersions || !versions.length) return;
+    els.sidebar.hidden = false;
+    versions.forEach(function (v) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "version-btn";
+      btn.textContent = v.label + " (" + v.n_frames + ")";
+      btn.dataset.name = v.name;
+      btn.addEventListener("click", function () { onSelect(v); });
+      els.sideVersions.appendChild(btn);
+    });
+  }
+
   function markActiveVersion(name) {
-    if (!els.versions) return;
-    Array.prototype.forEach.call(els.versions.querySelectorAll(".version-btn"), function (btn) {
-      btn.classList.toggle("active", btn.dataset.name === name);
+    [els.versions, els.sideVersions].forEach(function (box) {
+      if (!box) return;
+      Array.prototype.forEach.call(box.querySelectorAll(".version-btn"), function (btn) {
+        btn.classList.toggle("active", btn.dataset.name === name);
+      });
     });
   }
 
@@ -260,13 +281,16 @@
   }
 
   loadVersionsList().then(function (versions) {
-    if (versions.length >= 2) {
-      buildVersionSwitcher(versions, switchToVersion);
-      var first = versions[0];
+    var mains = versions.filter(function (v) { return !v.side; });
+    var sides = versions.filter(function (v) { return v.side; });
+    buildVersionSwitcher(mains, switchToVersion);
+    buildSideList(sides, switchToVersion);
+    var first = mains[0] || versions[0];
+    if (first) {
       return loadManifest(first.manifest).then(function (data) { activateManifest(data, first.name); });
     }
-    // No registered versions (or just one) — behave exactly as a single-version viewer.
-    return loadManifest().then(function (data) { activateManifest(data, versions[0] && versions[0].name); });
+    // No registered versions — behave exactly as a single-version viewer.
+    return loadManifest().then(function (data) { activateManifest(data, null); });
   }).catch(function (error) {
     fail("Could not load the manifest (" + error.message + "). " +
          "Run:  python src/build_sequence.py --frames output/sequence/ --out viewer/manifest.json");
