@@ -46,7 +46,27 @@ colmap feature_extractor \
 # above because RANSAC's geometric verification rejects most false pairs and
 # the two captures sit at clearly different radii, which disambiguates further.
 MATCHER="${2:-sequential}"
-if [ "$MATCHER" = "exhaustive" ]; then
+if [ "$MATCHER" = "loop" ]; then
+    # For two captures merged into one folder. Sequential matching keeps each
+    # walk's own links honest (neighbours in filename order), while vocabulary-
+    # tree loop detection proposes the cross-capture pairs sequential can never
+    # find. Unlike exhaustive it proposes only a bounded number of candidates
+    # per image, all of which still face RANSAC verification -- which is what
+    # kept exhaustive from working here: given every pair to consider, enough
+    # false matches between the pavilion's near-identical faces survived
+    # verification to fold the reconstruction.
+    VOCAB="${VOCAB_TREE:?set VOCAB_TREE to a downloaded vocab_tree_*.bin}"
+    echo "==> sequential + vocabulary-tree loop matching"
+    colmap sequential_matcher \
+        --database_path "$DB" \
+        --SequentialMatching.overlap 10 \
+        --SequentialMatching.quadratic_overlap 1 \
+        --SequentialMatching.loop_detection 1 \
+        --SequentialMatching.loop_detection_period 5 \
+        --SequentialMatching.loop_detection_num_images 30 \
+        --SequentialMatching.vocab_tree_path "$VOCAB" \
+        --FeatureMatching.use_gpu 0
+elif [ "$MATCHER" = "exhaustive" ]; then
     echo "==> exhaustive matching (fusing separate captures)"
     colmap exhaustive_matcher \
         --database_path "$DB" \

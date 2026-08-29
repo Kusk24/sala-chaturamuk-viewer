@@ -29,5 +29,11 @@
   "cause": "four-fold rotational symmetry. Exhaustive matching compares every pair, so faces roughly 90 degrees apart -- nearly identical on a four-porched pavilion -- match each other. The mapper resolves those false correspondences into a self-consistent but globally wrong reconstruction, which is why the reprojection error stays sub-pixel.",
   "significance": "src/match_features.py restricts matching to adjacent frames for exactly this reason, documented for optical flow. This is the same failure reproduced in structure-from-motion, an independent algorithm.",
   "decision": "reconstruct from salathai_version2 alone (146/146 registered, 0.58px, verified clean ring). Fusing the two captures would need matching that cannot pair distant faces -- e.g. sequential within each capture plus vocabulary-tree loop closure with geometric verification -- not exhaustive.",
-  "cost": "about 90 minutes: 60 matching, 27 mapping, on CPU"
+  "cost": "about 90 minutes: 60 matching, 27 mapping, on CPU",
+  "second_attempt": {
+    "method": "sequential matching within each walk plus vocabulary-tree loop detection, to propose only a bounded number of cross-capture candidates per image instead of every pair",
+    "outcome": "not runnable",
+    "reason": "COLMAP 4.1.1 reads FAISS vocabulary indexes; the only published tree (demuc.de vocab_tree_flickr100K_words32K.bin) is the legacy FLANN format and aborts on load. No FAISS-format tree is published, and training one on this project's own 352 images would be degenerate -- vocabulary trees are meant to be learned from large, diverse collections."
+  },
+  "final_decision": "Reconstruct from salathai_version2 alone. Fusing the two captures is blocked by the subject itself rather than by tooling: any matching that proposes non-adjacent pairs can match one of the four near-identical faces to another, and exhaustive matching demonstrated that geometric verification does not reliably reject those. The captures also differ in illumination (version1 sunny, version2 overcast) and in distance, so even correct geometry would likely bake patchy appearance into a splatting model. The honest route to better coverage is a new capture designed for reconstruction -- varied heights, consistent lighting -- not forcing these two together."
 }

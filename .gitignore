@@ -61,3 +61,4 @@ data/selected_combined/
 # COLMAP undistortion output -- rectified copies of the photographs plus a
 # rewritten PINHOLE model, regenerable by run_sfm.sh in under a minute.
 recon/*/undistorted/
+data/selected_combined_loop/
