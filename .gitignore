@@ -40,7 +40,7 @@ __pycache__/
 # COLMAP reconstruction working data -- databases, sparse/dense models and
 # point clouds are large and fully regenerable from the photographs by
 # recon/run_sfm.sh. The scripts and any measured summary stay tracked.
-recon/*/database.db
+recon/*/database.db*
 recon/*/sparse/
 !recon/*/camera_path.json
 !recon/*/camera_path.png
@@ -50,3 +50,14 @@ recon/*/*.ply
 # Word lock/autosave files
 ~$*
 recon/*.zip
+
+# Compiled Swift tool and reconstructed meshes -- regenerable from source
+# and photographs by recon/objectcapture/main.swift.
+recon/objectcapture/photogrammetry
+recon/*/*.usdz
+recon/*/*.obj
+data/selected_combined/
+
+# COLMAP undistortion output -- rectified copies of the photographs plus a
+# rewritten PINHOLE model, regenerable by run_sfm.sh in under a minute.
+recon/*/undistorted/

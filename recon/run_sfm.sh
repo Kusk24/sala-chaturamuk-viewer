@@ -16,7 +16,7 @@
 # which SfM would resolve as a folded, self-intersecting camera path.
 set -euo pipefail
 
-VERSION="${1:?usage: run_sfm.sh <version-name>}"
+VERSION="${1:?usage: run_sfm.sh <version-name> [sequential|exhaustive]}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGES="$ROOT/data/selected_$VERSION"
 WORK="$ROOT/recon/$VERSION"
@@ -39,18 +39,53 @@ colmap feature_extractor \
     --ImageReader.camera_model SIMPLE_RADIAL \
     --FeatureExtraction.use_gpu 0
 
-echo "==> sequential matching"
-colmap sequential_matcher \
-    --database_path "$DB" \
-    --SequentialMatching.overlap 10 \
-    --SequentialMatching.quadratic_overlap 1 \
-    --FeatureMatching.use_gpu 0
+# Two captures merged into one folder are not one continuous walk, so
+# sequential matching alone cannot link them -- it only ever compares
+# neighbours in filename order, which never crosses from one set to the other.
+# Exhaustive matching is the way to fuse them, accepting the symmetry risk
+# above because RANSAC's geometric verification rejects most false pairs and
+# the two captures sit at clearly different radii, which disambiguates further.
+MATCHER="${2:-sequential}"
+if [ "$MATCHER" = "exhaustive" ]; then
+    echo "==> exhaustive matching (fusing separate captures)"
+    colmap exhaustive_matcher \
+        --database_path "$DB" \
+        --FeatureMatching.use_gpu 0
+else
+    echo "==> sequential matching"
+    colmap sequential_matcher \
+        --database_path "$DB" \
+        --SequentialMatching.overlap 10 \
+        --SequentialMatching.quadratic_overlap 1 \
+        --FeatureMatching.use_gpu 0
+fi
 
 echo "==> mapping (incremental SfM)"
 colmap mapper \
     --database_path "$DB" \
     --image_path "$IMAGES" \
     --output_path "$WORK/sparse"
+
+# 3D Gaussian splatting refuses anything but PINHOLE/SIMPLE_PINHOLE -- it has no
+# distortion model of its own. SIMPLE_RADIAL is the better model for SfM itself
+# (a phone lens genuinely has radial distortion), so keep it above and remove
+# the distortion here instead: image_undistorter rectifies the photographs and
+# rewrites the cameras as PINHOLE. undistorted/ is what the notebooks consume.
+if [ -d "$WORK/sparse/0" ]; then
+    echo
+    echo "==> undistorting to PINHOLE (required by 3D Gaussian splatting)"
+    rm -rf "$WORK/undistorted"
+    colmap image_undistorter \
+        --image_path "$IMAGES" \
+        --input_path "$WORK/sparse/0" \
+        --output_path "$WORK/undistorted" \
+        --output_type COLMAP
+    # The splatting loaders expect sparse/0/, image_undistorter writes sparse/.
+    if [ -d "$WORK/undistorted/sparse" ] && [ ! -d "$WORK/undistorted/sparse/0" ]; then
+        mkdir -p "$WORK/undistorted/sparse/0"
+        mv "$WORK/undistorted/sparse"/*.bin "$WORK/undistorted/sparse/0/" 2>/dev/null || true
+    fi
+fi
 
 echo
 echo "==> result"
