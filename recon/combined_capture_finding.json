@@ -1,0 +1,33 @@
+{
+  "experiment": "combine salathai_version1 + salathai_version2 for reconstruction",
+  "motivation": "more viewpoints and two capture radii should improve triangulation, and version1 (shot from across the lake) sees the roof, which version2 -- shot upward from the balustrade -- never does",
+  "method": "COLMAP, 352 images, exhaustive matching (sequential cannot link two separate captures: it only compares neighbours in filename order)",
+  "headline_result": {
+    "registered_images": 351,
+    "of": 352,
+    "points": 138824,
+    "mean_reprojection_error_px": 0.99,
+    "note": "these numbers look healthy and are misleading"
+  },
+  "verdict": "REJECTED -- geometry is folded",
+  "evidence": {
+    "test": "a walk photographed in order should have consecutive cameras close together; ratio of largest to median inter-camera step, scale-invariant",
+    "version2_alone": {
+      "max_over_median_step": 7.0,
+      "jumps_over_5x": 2
+    },
+    "version2_within_combined": {
+      "max_over_median_step": 36.0,
+      "jumps_over_5x": 8
+    },
+    "version1_within_combined": {
+      "max_over_median_step": 102.2,
+      "jumps_over_5x": 19
+    },
+    "interpretation": "the same 146 version2 photographs form a clean ring alone and a badly broken path inside the combined model, so the combination corrupted the geometry rather than the input being at fault"
+  },
+  "cause": "four-fold rotational symmetry. Exhaustive matching compares every pair, so faces roughly 90 degrees apart -- nearly identical on a four-porched pavilion -- match each other. The mapper resolves those false correspondences into a self-consistent but globally wrong reconstruction, which is why the reprojection error stays sub-pixel.",
+  "significance": "src/match_features.py restricts matching to adjacent frames for exactly this reason, documented for optical flow. This is the same failure reproduced in structure-from-motion, an independent algorithm.",
+  "decision": "reconstruct from salathai_version2 alone (146/146 registered, 0.58px, verified clean ring). Fusing the two captures would need matching that cannot pair distant faces -- e.g. sequential within each capture plus vocabulary-tree loop closure with geometric verification -- not exhaustive.",
+  "cost": "about 90 minutes: 60 matching, 27 mapping, on CPU"
+}
