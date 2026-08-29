@@ -49,3 +49,4 @@ recon/*/*.ply
 
 # Word lock/autosave files
 ~$*
+recon/*.zip
