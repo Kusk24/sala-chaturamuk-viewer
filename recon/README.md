@@ -29,9 +29,24 @@ so faces far apart on the walk look alike. Exhaustive matching invites correspon
 *different* faces, which SfM resolves as a folded camera path. This project already measured that
 risk; the reconstruction inherits the finding.
 
-**2. Neural rendering — Google Colab (needs a GPU)**
+**2. Neural rendering — Kaggle or Colab (needs a GPU)**
 
-3D Gaussian splatting or NeRF, consuming the poses from stage 1. Run on Colab's free GPU.
+3D Gaussian splatting, consuming the poses from stage 1. Nothing here runs on the laptop: the
+splatting rasteriser and COLMAP's dense stage are both CUDA-only, and this is an Apple silicon Mac.
+
+- `sala_gaussian_splatting_kaggle.ipynb` — **preferred.** Kaggle's session is guaranteed for hours
+  and the 105 MB input is uploaded *once* as a Dataset, so an interrupted run costs nothing.
+- `sala_gaussian_splatting.ipynb` — Colab. Easier Drive integration, but the free tier
+  idle-disconnects, which can kill a 30–50 minute training run partway.
+
+Both take the same input bundle, `sala_v2_colmap.zip` (gitignored; rebuild it by copying
+`data/selected_<version>/*.jpg` into `images/` and the sparse model's three `.bin` files into
+`sparse/0/`).
+
+Both train with `--eval`, holding out every 8th photograph. That is deliberate: it yields PSNR/SSIM
+against real photographs the model never saw, which is the same kind of held-out measurement
+`src/evaluate.py` performs for the IBR pipeline — so the two approaches compare on one footing
+rather than by eye.
 
 ## What to expect from this data
 
