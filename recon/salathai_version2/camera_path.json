@@ -1,0 +1,29 @@
+{
+  "version": "salathai_version2",
+  "n_cameras": 146,
+  "planarity_singular_values": [
+    34.081,
+    32.129,
+    2.121
+  ],
+  "out_of_plane_sd": 0.176,
+  "radius": {
+    "mean": 3.839,
+    "min": 3.021,
+    "max": 5.496,
+    "sd": 0.534
+  },
+  "total_arc_deg": 342.0,
+  "angular_step_deg": {
+    "mean": 2.42,
+    "median": 2.26,
+    "max": 12.36
+  },
+  "neighbour_distance": {
+    "mean": 0.186,
+    "max": 1.089
+  },
+  "first_to_last_distance": 2.209,
+  "walk_closes_onto_start": false,
+  "units": "COLMAP units (arbitrary scale); angles are in degrees"
+}

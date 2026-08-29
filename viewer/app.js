@@ -253,7 +253,7 @@
       (manifest.total_arc_deg ? ", " + manifest.total_arc_deg + "° arc" : "") +
       (manifest.angular_step_deg ? ", " + manifest.angular_step_deg.toFixed(1) + "° mean step" : "");
     document.getElementById("arc-note").textContent = manifest.wraparound
-      ? "A full revolution was walked, so rotation loops continuously."
+      ? "The walk closes back onto its start, so rotation loops continuously."
       : "The capture is a partial arc — the lake blocks the far side of the pavilion — so " +
         "rotation stops at both ends rather than looping.";
     markActiveVersion(currentVersion);

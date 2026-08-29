@@ -36,3 +36,16 @@ output/debug/
 __pycache__/
 *.pyc
 .DS_Store
+
+# COLMAP reconstruction working data -- databases, sparse/dense models and
+# point clouds are large and fully regenerable from the photographs by
+# recon/run_sfm.sh. The scripts and any measured summary stay tracked.
+recon/*/database.db
+recon/*/sparse/
+!recon/*/camera_path.json
+!recon/*/camera_path.png
+recon/*/dense/
+recon/*/*.ply
+
+# Word lock/autosave files
+~$*

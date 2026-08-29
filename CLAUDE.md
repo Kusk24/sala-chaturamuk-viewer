@@ -20,15 +20,23 @@ This project follows **Szeliski, *Computer Vision: Algorithms and Applications*,
 (Image-Based Rendering)**. The academic point is synthesizing novel views **without recovering
 explicit 3D geometry**.
 
-**Do not** propose, scaffold, or implement:
+**Do not** substitute any of these for the IBR pipeline in `src/`:
 
 - COLMAP / OpenMVG / Meshroom or any full structure-from-motion + MVS reconstruction
 - Photogrammetry producing a mesh or textured 3D model
 - NeRF, Gaussian splatting, or any learned radiance-field method
 - Anything that outputs a point cloud or mesh as the rendering primitive
 
-These are all *better* at making a nice 3D demo. They are **out of scope** and would invalidate the
-project's framing. If a task seems to call for one, say so and stop — do not substitute silently.
+These are all *better* at making a nice 3D demo, and that is exactly why the IBR result must not
+quietly become one of them. The viewer in `viewer/` and the pipeline in `src/` stay geometry-free.
+
+**Amendment (2026-08-29):** the course instructor has asked for a 3D model produced with neural
+methods, so reconstruction is now in scope **as a separate, clearly-labelled comparison** living in
+`recon/` — never as a replacement for, or silent upgrade to, the IBR pipeline. The paper keeps
+image-based rendering as its contribution and reports reconstruction alongside it: same
+photographs, two approaches, compared on cost, coverage and quality. If a task would blur the two
+(e.g. feeding reconstructed geometry back into the viewer, or describing the IBR result as a 3D
+model), say so and stop.
 
 Feature matching (SIFT/ORB) is used **only** to establish 2D correspondences between adjacent frames
 for warping. It is not a step toward reconstruction.
