@@ -9,7 +9,7 @@ import AppKit
 
 let a = CommandLine.arguments
 guard a.count >= 3 else { print("usage: usdz_snap <in.usdz> <out-prefix> [az...]"); exit(2) }
-let azimuths = a.count > 3 ? Array(a[3...]).compactMap { Double($0) } : [0, 90, 180, 270]
+let specs: [(Double, Double)] = a.count > 3 ? Array(a[3...]).map { s in let p = s.split(separator: ":"); return (Double(p[0])!, p.count > 1 ? Double(p[1])! : 18) } : [(0, 18), (90, 18), (180, 18), (270, 18)]
 
 guard let scene = try? SCNScene(url: URL(fileURLWithPath: a[1]), options: nil) else {
     print("could not load \(a[1])"); exit(1)
@@ -27,9 +27,9 @@ let renderer = SCNRenderer(device: MTLCreateSystemDefaultDevice(), options: nil)
 renderer.scene = scene
 renderer.autoenablesDefaultLighting = true
 
-for az in azimuths {
+for (az, el) in specs {
     let cam = SCNNode(); cam.camera = SCNCamera(); cam.camera!.zFar = Double(dist) * 10
-    let r = az * .pi / 180, elev = 18.0 * .pi / 180
+    let r = az * .pi / 180, elev = el * .pi / 180
     cam.position = SCNVector3(c.x + CGFloat(cos(elev)*sin(r))*dist,
                               c.y + CGFloat(sin(elev))*dist,
                               c.z + CGFloat(cos(elev)*cos(r))*dist)
@@ -38,7 +38,7 @@ for az in azimuths {
     renderer.pointOfView = cam
     let img = renderer.snapshot(atTime: 0, with: CGSize(width: 1280, height: 900),
                                 antialiasingMode: .multisampling4X)
-    let out = "\(a[2])_\(Int(az)).png"
+    let out = "\(a[2])_\(Int(az))_\(Int(el)).png"
     if let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
        let png = rep.representation(using: .png, properties: [:]) {
         try? png.write(to: URL(fileURLWithPath: out)); print("wrote \(out)")
