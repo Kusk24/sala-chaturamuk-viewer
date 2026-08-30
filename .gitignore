@@ -62,3 +62,8 @@ data/selected_combined/
 # rewritten PINHOLE model, regenerable by run_sfm.sh in under a minute.
 recon/*/undistorted/
 data/selected_combined_loop/
+
+# Kaggle kernel output pulled by `kaggle kernels output` -- the trained
+# gaussian model, its intermediate iterations and the held-out renders.
+# Hundreds of megabytes, and regenerable by re-running the notebook.
+recon/kaggle_output/
