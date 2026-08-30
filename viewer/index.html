@@ -55,6 +55,12 @@
     background-size: 44px 44px;
   }
   body > * { position: relative; z-index: 1; }
+  .compare-link { margin: 10px 0 0; font-size: 14px; }
+  .compare-link a {
+    color: var(--accent-light); text-decoration: none;
+    border-bottom: 1px solid var(--line-soft); padding-bottom: 1px;
+  }
+  .compare-link a:hover { color: var(--text); border-bottom-color: var(--accent); }
   header {
     display: grid;
     grid-template-columns: minmax(0, 1240px);
@@ -510,6 +516,7 @@
   <h1>Sala Chaturamuk Phaichit — Image-Based Rendering Viewer</h1>
   <p>Novel viewpoints synthesized from photographs by optical-flow view interpolation. No 3D model.
      <span id="summary"></span></p>
+  <p class="compare-link"><a href="reconstruction.html">Compare with the 3D reconstruction (separate, photogrammetry) &rarr;</a></p>
 </header>
 
 <main>

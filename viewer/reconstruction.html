@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sala Chaturamuk Phaichit — 3D Reconstruction (comparison)</title>
+<style>
+  /* Companion page to index.html. This is the SEPARATE reconstruction
+     comparison (CLAUDE.md amendment 2026-08-29): a photogrammetry mesh
+     from the same photographs, shown alongside the image-based renderer,
+     never mixed into it. Same rules as the viewer: no build step, no
+     framework, no external assets -- three.js r128 is vendored in
+     vendor/ and the model is embedded as a JS global (model_*.js) so the
+     page opens straight from file://. */
+  :root {
+    color-scheme: dark;
+    --bg: #0d0b09;
+    --bg-deep: #080706;
+    --panel: #181310;
+    --line-soft: rgba(216, 180, 90, .18);
+    --text: #f3eadc;
+    --muted: #b8aa99;
+    --accent: #d8b45a;
+    --accent-light: #f0d68e;
+    --roof-red: #843a32;
+    --radius: 14px;
+    --shadow: 0 22px 60px rgba(0, 0, 0, .42);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% -10%, rgba(132, 58, 50, .18), transparent 34rem),
+      radial-gradient(circle at 88% 8%, rgba(216, 180, 90, .09), transparent 30rem),
+      linear-gradient(180deg, #110d0a 0, var(--bg) 28rem, var(--bg-deep) 100%);
+    color: var(--text);
+    font: 15px/1.5 "Noto Sans Thai", "Leelawadee UI", Tahoma,
+      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1240px);
+    justify-content: center;
+    padding: 24px clamp(20px, 4vw, 56px) 22px;
+    border-bottom: 1px solid rgba(216, 180, 90, .14);
+    background:
+      linear-gradient(90deg, rgba(132, 58, 50, .08), transparent 34%, transparent 66%, rgba(216, 180, 90, .04)),
+      rgba(8, 7, 6, .42);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, .16);
+  }
+  header::after {
+    content: "";
+    position: absolute;
+    left: clamp(20px, 4vw, 56px);
+    right: clamp(20px, 4vw, 56px);
+    bottom: -1px;
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent, var(--roof-red) 18%, var(--accent) 42% 58%,
+      var(--roof-red) 82%, transparent);
+    opacity: .82;
+  }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: clamp(20px, 2.4vw, 28px);
+    font-weight: 650;
+    letter-spacing: .01em;
+  }
+  header p { margin: 0; color: var(--muted); max-width: 900px; }
+  .back { margin-top: 10px; font-size: 14px; }
+  .back a {
+    color: var(--accent-light); text-decoration: none;
+    border-bottom: 1px solid var(--line-soft); padding-bottom: 1px;
+  }
+  .back a:hover { color: var(--text); border-bottom-color: var(--accent); }
+  .tag {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line-soft);
+    background: rgba(24, 19, 16, .76);
+    color: var(--accent-light);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+  main {
+    flex: 1;
+    width: min(100% - 40px, 1000px);
+    margin: 22px auto 0;
+  }
+  #stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 60%, #241c17 0, #120e0b 60%, #0a0807 100%);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(216, 180, 90, .12);
+    cursor: grab;
+  }
+  #stage.dragging { cursor: grabbing; }
+  #stage canvas { display: block; width: 100% !important; height: 100% !important; }
+  #status {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    background: linear-gradient(0deg, rgba(8, 7, 6, .72), transparent);
+    pointer-events: none;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+    margin: 14px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .controls button {
+    min-height: 36px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 550;
+    cursor: pointer;
+    background: rgba(24, 19, 16, .76);
+    color: var(--text);
+    border: 1px solid var(--line-soft);
+    border-radius: 999px;
+    padding: 6px 15px;
+  }
+  .controls button:hover { border-color: rgba(216, 180, 90, .5); }
+  .controls label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin: 22px 0 0;
+  }
+  .fact {
+    padding: 14px 16px;
+    background: rgba(24, 19, 16, .66);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+  }
+  .fact b { display: block; color: var(--accent-light); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+  .fact span { color: var(--muted); font-size: 14px; line-height: 1.5; }
+  footer {
+    width: calc(100% - 40px);
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 17px 4px 24px;
+    color: var(--muted);
+    border-top: 1px solid rgba(216, 180, 90, .12);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  kbd {
+    font: inherit; font-size: 11px;
+    padding: 1px 6px; border-radius: 5px;
+    border: 1px solid var(--line-soft); background: rgba(24, 19, 16, .8);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Sala Chaturamuk Phaichit — 3D Reconstruction <span class="tag">comparison</span></h1>
+  <p>A textured mesh reconstructed from the <em>same 146 photographs</em> by photogrammetry
+     (Apple Object Capture with per-image sky masks, then geometric post-processing).
+     This is the comparison model, shown separately from the image-based renderer:
+     same input, two approaches.</p>
+  <p class="back"><a href="index.html">&larr; Back to the image-based rendering viewer (no 3D model)</a></p>
+</header>
+
+<main>
+  <div id="stage">
+    <div id="status">Loading model…</div>
+  </div>
+
+  <div class="controls">
+    <button id="reset">Reset view</button>
+    <label><input type="checkbox" id="spin" checked> Auto-rotate</label>
+    <label><input type="checkbox" id="wire"> Wireframe</label>
+    <span id="stats"></span>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><b>Method</b><span>Multi-view photogrammetry: feature matching → sparse SfM → dense MVS → mesh → texture baking (Object Capture, full detail).</span></div>
+    <div class="fact"><b>Input</b><span>146 eye-level photographs, 4032×3024, with sky masked out per image so no sky is reconstructed as geometry.</span></div>
+    <div class="fact"><b>Post-processing</b><span>Ground trim, sliver removal, hole closing, Taubin smoothing. The central roof crossing was never visible in any photograph and is <em>modelled</em> as a fitted cross-gable — the one part of this mesh that is not measured.</span></div>
+    <div class="fact"><b>Versus IBR</b><span>The IBR viewer synthesizes in-between viewpoints from photographs and has no geometry; this mesh can be viewed from any angle but inherits every occlusion of the capture.</span></div>
+  </div>
+</main>
+
+<footer>
+  Drag to orbit · scroll to zoom · right-drag to pan · <kbd>R</kbd> resets the view.
+  Model: <code id="model-name">model_salathai_version2.js</code> — generated from the reconstructed usdz by
+  <code>recon/objectcapture/usdz_to_viewer_js.py</code>.
+</footer>
+
+<!-- Vendored three.js r128 (UMD build: works from file://, unlike ES modules).
+     model_*.js embeds the GLB as a base64 JS global, the same trick the IBR
+     viewer uses for its manifests, because browsers refuse fetch() on file://. -->
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script src="model_salathai_version2.js"></script>
+<script>
+(function () {
+  "use strict";
+  var stage = document.getElementById("stage");
+  var status = document.getElementById("status");
+  var statsEl = document.getElementById("stats");
+
+  if (!window.THREE) { status.textContent = "three.js failed to load (vendor/three.min.js missing)."; return; }
+  if (!window.SALA_RECON_GLB) {
+    status.textContent = "Model not found. Generate it with: python3 recon/objectcapture/usdz_to_viewer_js.py " +
+      "recon/salathai_version2/sala_mesh_final.usdz viewer/model_salathai_version2.js";
+    return;
+  }
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  stage.insertBefore(renderer.domElement, status);
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(42, 4 / 3, 0.01, 100);
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.9;
+  controls.maxPolarAngle = Math.PI * 0.55;   // do not dive far under the ground sheet
+
+  // Neutral studio lighting: the texture already carries the photographs'
+  // own shading, so keep lights soft and unbiased.
+  scene.add(new THREE.HemisphereLight(0xfff4e0, 0x3a2e26, 1.25));
+  var key = new THREE.DirectionalLight(0xffffff, 0.65);
+  key.position.set(3, 5, 2);
+  scene.add(key);
+  var fill = new THREE.DirectionalLight(0xd8b45a, 0.18);
+  fill.position.set(-4, 2, -3);
+  scene.add(fill);
+
+  var model = null, home = null;
+
+  function resize() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  function frame(obj) {
+    // Frame the BUILDING, not the ground sheet around it: the terrain disc
+    // is four times wider than the pavilion, so a whole-model fit leaves
+    // the sala small in the stage. Extent is taken from vertices above the
+    // lowest quarter of the height range.
+    var box = new THREE.Box3().setFromObject(obj);
+    var size = box.getSize(new THREE.Vector3());
+    var yCut = box.min.y + size.y * 0.25;
+    var bb = new THREE.Box3();
+    var v = new THREE.Vector3();
+    obj.traverse(function (o) {
+      if (!o.isMesh) return;
+      var pos = o.geometry.attributes.position;
+      for (var i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
+        if (v.y > yCut) bb.expandByPoint(v);
+      }
+    });
+    var bsize = bb.getSize(new THREE.Vector3());
+    var center = bb.getCenter(new THREE.Vector3());
+    obj.position.sub(center);                       // centre the building at the origin
+    var radius = Math.max(bsize.x, bsize.z, bsize.y * 1.2) * 0.5;
+    var dist = radius / Math.tan(camera.fov * Math.PI / 360) * 1.25;
+    home = { pos: new THREE.Vector3(dist * 0.72, dist * 0.34, dist * 0.72), target: new THREE.Vector3(0, bsize.y * 0.06, 0) };
+    resetView();
+  }
+  function resetView() {
+    if (!home) return;
+    camera.position.copy(home.pos);
+    controls.target.copy(home.target);
+    controls.update();
+  }
+
+  status.textContent = "Decoding model…";
+  new THREE.GLTFLoader().load(window.SALA_RECON_GLB, function (gltf) {
+    model = gltf.scene;
+    var faces = 0;
+    model.traverse(function (o) {
+      if (o.isMesh) {
+        faces += o.geometry.index ? o.geometry.index.count / 3 : o.geometry.attributes.position.count / 3;
+        o.material.side = THREE.DoubleSide;
+        if (o.material.map) { o.material.map.anisotropy = renderer.capabilities.getMaxAnisotropy(); }
+      }
+    });
+    scene.add(model);
+    frame(model);
+    status.textContent = "";
+    statsEl.textContent = faces.toLocaleString() + " triangles · textured";
+  }, function (ev) {
+    if (ev.total) status.textContent = "Decoding model… " + Math.round(100 * ev.loaded / ev.total) + "%";
+  }, function (err) {
+    status.textContent = "Could not load the model: " + (err && err.message ? err.message : err);
+  });
+
+  document.getElementById("reset").addEventListener("click", resetView);
+  document.getElementById("spin").addEventListener("change", function (e) { controls.autoRotate = e.target.checked; });
+  document.getElementById("wire").addEventListener("change", function (e) {
+    if (!model) return;
+    model.traverse(function (o) { if (o.isMesh) o.material.wireframe = e.target.checked; });
+  });
+  window.addEventListener("keydown", function (e) { if (e.key === "r" || e.key === "R") resetView(); });
+  renderer.domElement.addEventListener("pointerdown", function () { stage.classList.add("dragging"); });
+  window.addEventListener("pointerup", function () { stage.classList.remove("dragging"); });
+
+  (function loop() {
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  })();
+})();
+</script>
+</body>
+</html>

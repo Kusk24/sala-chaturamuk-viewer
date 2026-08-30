@@ -73,3 +73,8 @@ recon/kaggle_output/
 recon/objectcapture/masks_*/
 recon/objectcapture/photogrammetry_masked
 recon/objectcapture/usdz_snap
+
+# Embedded copy of the reconstructed mesh for viewer/reconstruction.html
+# (GLB as a base64 JS global, tens of MB). Regenerable from the usdz by
+# recon/objectcapture/usdz_to_viewer_js.py; the vendored three.js stays.
+viewer/model_*.js
