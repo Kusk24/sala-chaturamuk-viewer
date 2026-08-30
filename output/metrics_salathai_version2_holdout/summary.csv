@@ -1,0 +1,2 @@
+n_scored,n_skipped,n_captured,n_between,angular_gap_deg,psnr_interp_mean_db,psnr_interp_median_db,ssim_interp_mean,psnr_baseline_mean_db,psnr_baseline_median_db,ssim_baseline_mean
+144,2,73,2,,13.8761,14.0435,0.49107,13.2717,13.4439,0.478906
