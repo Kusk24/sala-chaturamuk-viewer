@@ -28,7 +28,7 @@ from pxr import Usd, UsdGeom, UsdUtils, Sdf, Vt
 
 src, dst = sys.argv[1], sys.argv[2]
 TAUBIN_STEPS = int(sys.argv[3]) if len(sys.argv) > 3 else 30
-MIN_ANGLE, MAX_HOLE = 2.0, 40
+MIN_ANGLE, MAX_HOLE = 4.0, 200
 
 work = tempfile.mkdtemp()
 with zipfile.ZipFile(src) as z:
@@ -56,13 +56,28 @@ amin = np.minimum.reduce([angle(tri[:, 0], tri[:, 1], tri[:, 2]),
                           angle(tri[:, 1], tri[:, 2], tri[:, 0]),
                           angle(tri[:, 2], tri[:, 0], tri[:, 1])])
 spike = amin < MIN_ANGLE
+# The crossing cap (polish_usdz.py) is a fan of long thin triangles to an
+# apex that is the mesh's highest vertex; its apex angles are ~2.5 deg and
+# would all be culled as slivers. Faces touching the apex are protected.
+# (highest REFERENCED vertex: the raw mesh still holds unreferenced vertices
+# of deleted sky faces that sit higher than the cap)
+ref_v = np.unique(F.ravel())
+apex = ref_v[P[ref_v, 1].argmax()]
+capf = (F == apex).any(1)
+spike &= ~capf
 keep = np.where(~spike)[0]
 print(f'spike removal: dropping {spike.sum():,} sliver faces (median edge {med:.4f})')
 F1 = F[keep]
+# MeshLab works on the body only: the cap fan has non-manifold apex edges
+# where boundary chains touch, which makes the hole closer refuse the whole
+# mesh. The cap is re-attached afterwards (its vertices are untouched:
+# boundary vertices are smoothed with the body, the apex is not in the body).
+cap_in = capf[keep]
+F_body, F_cap = F1[~cap_in], F1[cap_in]
 
 # --- 2 + 3. MeshLab: close small holes, Taubin smooth ---------------------------
 ms = pymeshlab.MeshSet()
-ms.add_mesh(pymeshlab.Mesh(vertex_matrix=P, face_matrix=F1.astype(np.int32)))
+ms.add_mesh(pymeshlab.Mesh(vertex_matrix=P, face_matrix=F_body.astype(np.int32)))
 n0 = ms.current_mesh().face_number()
 try:
     ms.meshing_close_holes(maxholesize=MAX_HOLE, newfaceselected=False, selfintersection=True)
@@ -73,9 +88,8 @@ ms.apply_coord_taubin_smoothing(lambda_=0.5, mu=-0.53, stepsmoothnum=TAUBIN_STEP
 print(f'taubin smoothing: {TAUBIN_STEPS} steps')
 cm = ms.current_mesh()
 P2 = cm.vertex_matrix()
-F2 = cm.face_matrix()
+F2 = np.concatenate([cm.face_matrix(), F_cap])
 assert len(P2) == len(P), 'vertex count changed -- UV mapping would break'
-
 # --- map every output face back to an original face for its UV corners ---------
 key = {tuple(sorted(f)): i for i, f in zip(keep, F1)}
 src_face = np.empty(len(F2), int)
