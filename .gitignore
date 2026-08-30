@@ -67,3 +67,9 @@ data/selected_combined_loop/
 # gaussian model, its intermediate iterations and the held-out renders.
 # Hundreds of megabytes, and regenerable by re-running the notebook.
 recon/kaggle_output/
+
+# Masked-photogrammetry regenerables: per-image sky masks (make_masks.py),
+# compiled tools, and the usdz meshes (already covered by recon/*/*.usdz).
+recon/objectcapture/masks_*/
+recon/objectcapture/photogrammetry_masked
+recon/objectcapture/usdz_snap
