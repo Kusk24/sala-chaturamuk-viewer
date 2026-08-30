@@ -69,18 +69,60 @@ r = np.hypot(cent[:, 0] - cx, cent[:, 2] - cz)
 y = cent[:, 1]
 # The 0.45-0.7 band holds the white balustrade lanterns at large radius --
 # only central white there is roof valley; above 0.7 it is all roof.
-paint = white & (((y > 0.45) & (y <= 0.7) & (r < 1.1)) | ((y > 0.7) & (y <= FLAP_Y)))
-flap = white & (y > FLAP_Y)
-print(f'white roof faces to inpaint: {paint.sum():,}   flaps to delete: {flap.sum():,}')
+flap_cand = white & (y > FLAP_Y)
+# VERDICT after testing all three rules: the reconstruction has no surface
+# at the central roof crossing (occluded from every eye-level viewpoint),
+# and the white sheets are what covers that gap. Deleting them -- by any
+# support heuristic -- exposes a see-through hole that looks worse than
+# they do. So nothing is deleted: every white face keeps its geometry and
+# is recolored by the inpaint instead. The component sweep still removes
+# anything the ground trim orphans.
+# Delete a high white face ONLY when other geometry continues beneath it --
+# then it is a flap hanging over the roof. If nothing lies below, the face
+# IS the roof surface there, and deleting it opens a hole visible from
+# above (which is exactly what the first version of this rule did).
+from scipy.spatial import cKDTree
+others = np.where(~flap_cand)[0]
+tree = cKDTree(cent[others][:, [0, 2]])
+oy = cent[others, 1]
+flap = np.zeros(len(cent), bool)
+for i in np.where(flap_cand)[0]:
+    nb = tree.query_ball_point(cent[i, [0, 2]], 0.06)
+    # support must be the roof continuing NEAR beneath the flap; the
+    # terrace floor a unit further down does not count -- that is what a
+    # see-through hole looks like.
+    if any(cent[i, 1] - 0.45 < oy[j] < cent[i, 1] - 0.08 for j in nb):
+        flap[i] = True
+flap[:] = False
+paint = white & ((((y > 0.45) & (y <= 0.7) & (r < 1.1)) | ((y > 0.7) & (y <= FLAP_Y)))
+                 ) | (flap_cand & ~flap)
+print(f'white roof faces to inpaint: {paint.sum():,}   '
+      f'true hanging flaps to delete: {flap.sum():,} of {flap_cand.sum():,} candidates')
 
 # --- inpaint their UV triangles ----------------------------------------------
+# Telea inpainting fails here: the white faces' UV islands are surrounded
+# by more sky-white texture, so inpainting fills white with white. Instead
+# each white face is painted with the colour of its nearest REAL roof face
+# in 3D -- red tiles propagate red, gold ridges propagate gold -- and the
+# seams are blended with a masked blur.
+from scipy.spatial import cKDTree
+ref = (~white) & (y > 0.45)
+rt = cKDTree(cent[ref])
+refcols = (colf[ref] * 255).astype(np.uint8)
+_, nn = rt.query(cent[paint])
+fill = refcols[nn]
+rng = np.random.default_rng(0)
 mask = np.zeros((H, W), np.uint8)
-tx, ty = px(uv_c[paint])                                # (Nw,3) each
+tx, ty = px(uv_c[paint])
 for k in range(int(paint.sum())):
-    cv2.fillPoly(mask, [np.stack([tx[k], ty[k]], 1)], 255)
-mask = cv2.dilate(mask, np.ones((9, 9), np.uint8))
-print(f'inpainting {mask.astype(bool).mean()*100:.2f}% of the texture')
-tex = cv2.inpaint(tex, mask, 11, cv2.INPAINT_TELEA)
+    poly = np.stack([tx[k], ty[k]], 1)
+    c = np.clip(fill[k].astype(int) + rng.integers(-12, 13, 3), 0, 255)
+    cv2.fillPoly(tex, [poly], tuple(int(v) for v in c))
+    cv2.fillPoly(mask, [poly], 255)
+mask = cv2.dilate(mask, np.ones((7, 7), np.uint8))
+print(f'recoloring {mask.astype(bool).mean()*100:.2f}% of the texture from nearest roof faces')
+blur = cv2.GaussianBlur(tex, (0, 0), 5)
+tex[mask > 0] = blur[mask > 0]
 cv2.imwrite(tex_path, tex)
 
 # --- trim ragged ground fringe, drop hanging flaps ----------------------------
