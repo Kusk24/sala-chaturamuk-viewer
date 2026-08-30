@@ -109,21 +109,48 @@ from scipy.spatial import cKDTree
 ref = (~white) & (y > 0.45)
 rt = cKDTree(cent[ref])
 refcols = (colf[ref] * 255).astype(np.uint8)
-_, nn = rt.query(cent[paint])
-fill = refcols[nn]
+d16, nn = rt.query(cent[paint], k=16)
+w16 = 1.0 / np.maximum(d16, 1e-6)
+w16 /= w16.sum(1, keepdims=True)
+fill = (refcols[nn].astype(np.float64) * w16[..., None]).sum(1).astype(np.uint8)
 rng = np.random.default_rng(0)
 mask = np.zeros((H, W), np.uint8)
 tx, ty = px(uv_c[paint])
 for k in range(int(paint.sum())):
     poly = np.stack([tx[k], ty[k]], 1)
-    c = np.clip(fill[k].astype(int) + rng.integers(-12, 13, 3), 0, 255)
+    c = np.clip(fill[k].astype(int) + rng.integers(-6, 7, 3), 0, 255)
     cv2.fillPoly(tex, [poly], tuple(int(v) for v in c))
     cv2.fillPoly(mask, [poly], 255)
 mask = cv2.dilate(mask, np.ones((7, 7), np.uint8))
 print(f'recoloring {mask.astype(bool).mean()*100:.2f}% of the texture from nearest roof faces')
-blur = cv2.GaussianBlur(tex, (0, 0), 5)
+blur = cv2.GaussianBlur(tex, (0, 0), 7)
 tex[mask > 0] = blur[mask > 0]
 cv2.imwrite(tex_path, tex)
+
+# --- relax the crumpled sheet geometry ----------------------------------------
+# The sheets shade like crumpled foil because they ARE crumpled sky geometry.
+# Interior sheet vertices (every incident face painted) are Laplacian-relaxed;
+# vertices shared with real roof faces are pinned so the seam cannot move.
+pf = faces[paint]
+vert_tot = np.zeros(len(pts), int)
+vert_pnt = np.zeros(len(pts), int)
+np.add.at(vert_tot, faces.ravel(), 1)
+np.add.at(vert_pnt, pf.ravel(), 1)
+interior = (vert_pnt > 0) & (vert_pnt == vert_tot)
+nbrs = {}
+for a, b in np.concatenate([pf[:, [0, 1]], pf[:, [1, 2]], pf[:, [2, 0]]]):
+    nbrs.setdefault(a, set()).add(b)
+    nbrs.setdefault(b, set()).add(a)
+P = pts.astype(np.float64).copy()
+mov = np.where(interior)[0]
+for _ in range(30):
+    snap = P.copy()
+    for v in mov:
+        ns = list(nbrs.get(v, ()))
+        if ns:
+            P[v] = 0.4 * snap[v] + 0.6 * snap[ns].mean(0)
+print(f'relaxed {len(mov):,} sheet vertices (30 Laplacian iterations)')
+m.GetPointsAttr().Set(Vt.Vec3fArray.FromNumpy(P.astype(np.float32)))
 
 # --- trim ragged ground fringe, drop hanging flaps ----------------------------
 low = cent[:, 1] < GROUND_Y
@@ -180,11 +207,19 @@ for pv in api.GetPrimvars():
     else:
         vals = np.array(pv.Get())
         pv.GetAttr().Set(type(pv.Get())(vals[ck2].tolist()))
+# The relaxation moved vertices, so stored normals are stale everywhere the
+# sheets were. Recompute smooth area-weighted vertex normals for the whole
+# final mesh -- organic photogrammetry shades better smooth anyway.
+fn = np.cross(P[kept_faces[:, 1]] - P[kept_faces[:, 0]],
+              P[kept_faces[:, 2]] - P[kept_faces[:, 0]])
+vn = np.zeros_like(P)
+for k in range(3):
+    np.add.at(vn, kept_faces[:, k], fn)
+vn /= np.linalg.norm(vn, axis=1, keepdims=True) + 1e-12
 na2 = m.GetNormalsAttr()
-if na2.Get() is not None and m.GetNormalsInterpolation() == UsdGeom.Tokens.faceVarying:
-    nv2 = np.array(na2.Get())
-    if len(nv2) == len(ck2):
-        na2.Set(Vt.Vec3fArray.FromNumpy(nv2[ck2]))
+if na2.Get() is not None:
+    m.SetNormalsInterpolation(UsdGeom.Tokens.faceVarying)
+    na2.Set(Vt.Vec3fArray.FromNumpy(vn[kept_faces.ravel()].astype(np.float32)))
 
 stage.Save()
 if os.path.exists(dst):
