@@ -74,6 +74,17 @@
   header p { margin: 0; color: var(--muted); max-width: 900px; }
   .back { margin-top: 10px; font-size: 14px; }
   .back a {
+  nav { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+  nav a, nav span.here {
+    font-size: 13px; text-decoration: none; padding: 6px 11px; border-radius: 999px;
+    border: 1px solid transparent; transition: color .18s, border-color .18s, background-color .18s;
+  }
+  nav a { color: var(--accent); border-color: rgba(216,180,90,.2); }
+  nav a:hover { color: #fff; border-color: var(--accent); background: rgba(216,180,90,.1); text-decoration: none; }
+  nav span.here {
+    color: var(--accent); border-color: rgba(216,180,90,.45);
+    background: rgba(216,180,90,.12); font-weight: 650; cursor: default;
+  }
     color: var(--accent-light); text-decoration: none;
     border-bottom: 1px solid var(--line-soft); padding-bottom: 1px;
   }
@@ -181,7 +192,7 @@
      (Apple Object Capture with per-image sky masks, then geometric post-processing).
      This is the comparison model, shown separately from the image-based renderer:
      same input, two approaches.</p>
-  <p class="back"><a href="index.html">&larr; Back to the image-based rendering viewer (no 3D model)</a></p>
+  <nav id="viewnav"></nav>
 </header>
 
 <main>
@@ -337,5 +348,6 @@
   })();
 })();
 </script>
+<script src="nav.js"></script>
 </body>
 </html>

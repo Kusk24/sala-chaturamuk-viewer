@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lamp beside Sala Chaturamuk Phaichit — Gaussian Splatting</title>
+<style>
+  /* Third comparison page (CLAUDE.md amendment 2026-08-29): a 3D Gaussian
+     Splatting radiance field from the same photographs, shown alongside the
+     image-based renderer, never mixed into it. Same rules as the other
+     pages: no build step, no framework, no external assets -- the renderer
+     is vendored in vendor/splat.js and the model is embedded as a JS global
+     so the page opens straight from file://. */
+  :root {
+    color-scheme: dark;
+    --bg: #0d0b09; --bg-deep: #080706;
+    --line-soft: rgba(216,180,90,.18);
+    --text: #f3eadc; --muted: #b8aa99;
+    --accent: #d8b45a; --roof-red: #843a32;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text);
+    background:
+      radial-gradient(circle at 12% -10%, rgba(132,58,50,.18), transparent 34rem),
+      radial-gradient(circle at 88% 8%, rgba(216,180,90,.09), transparent 30rem),
+      linear-gradient(180deg, #110d0a 0, var(--bg) 28rem, var(--bg-deep) 100%);
+    font: 15px/1.5 "Noto Sans Thai", "Leelawadee UI", Tahoma,
+      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column;
+  }
+  header {
+    padding: 24px clamp(20px,4vw,56px) 22px;
+    border-bottom: 1px solid rgba(216,180,90,.14);
+    background: rgba(8,7,6,.42);
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; width: 100%; }
+  h1 { margin: 0 0 6px; font-size: clamp(21px,3vw,29px); letter-spacing: -.3px; }
+  .badge {
+    display: inline-block; vertical-align: middle; margin-left: 10px;
+    padding: 3px 10px; border-radius: 999px; font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+    color: var(--accent); border: 1px solid var(--line-soft);
+    background: rgba(216,180,90,.07);
+  }
+  p.lede { margin: 0 0 12px; color: var(--muted); max-width: 76ch; }
+  p.lede em { color: var(--text); font-style: normal; font-weight: 600; }
+  nav { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+  nav a, nav span.here {
+    font-size: 13px; text-decoration: none; padding: 6px 11px; border-radius: 999px;
+    border: 1px solid transparent; transition: color .18s, border-color .18s, background-color .18s;
+  }
+  nav a { color: var(--accent); border-color: rgba(216,180,90,.2); }
+  nav a:hover { color: #fff; border-color: var(--accent); background: rgba(216,180,90,.1); text-decoration: none; }
+  nav span.here {
+    color: var(--accent); border-color: rgba(216,180,90,.45);
+    background: rgba(216,180,90,.12); font-weight: 650; cursor: default;
+  }
+  main { flex: 1; padding: 22px clamp(20px,4vw,56px) 40px; }
+  .stage {
+    position: relative; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--line-soft); background: #000;
+    box-shadow: 0 22px 60px rgba(0,0,0,.42); aspect-ratio: 16/10;
+  }
+  #canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }
+  #spinner {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--muted); font-size: 14px; letter-spacing: .04em; z-index: 3;
+  }
+  #message { position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--roof-red); padding: 24px; text-align: center; z-index: 4; }
+  #progress { position: absolute; left: 0; top: 0; height: 2px;
+    background: var(--accent); width: 0; z-index: 5; }
+  .hud {
+    position: absolute; left: 12px; bottom: 10px; z-index: 2;
+    font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--muted); background: rgba(8,7,6,.55);
+    border: 1px solid var(--line-soft); border-radius: 8px; padding: 5px 9px;
+  }
+  .facts { display: grid; gap: 14px; margin-top: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); }
+  .fact { border: 1px solid var(--line-soft); border-radius: 12px;
+    padding: 13px 15px; background: rgba(24,19,16,.5); }
+  .fact dt { font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 5px; }
+  .fact dd { margin: 0; font-size: 14px; }
+  .note { margin-top: 22px; color: var(--muted); font-size: 13.5px; max-width: 82ch; }
+  .note strong { color: var(--text); }
+  kbd { border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 5px;
+    font: 11px ui-monospace, Menlo, monospace; color: var(--text); }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>The lamp beside the Sala <span class="badge">Object scale</span></h1>
+  <p class="lede">
+    The same method as the pavilion page, turned on a single object: the stone lamp standing on
+    the terrace beside Sala Chaturamuk Phaichit. <em><span class="n">130,899</span> Gaussians</em>, optimised for 30,000
+    iterations against <em>100 photographs</em> taken in one 4-minute session on 5 September 2026 —
+    three orbits at high, eye and low level, one lens throughout. There is no mesh in this page.
+  </p>
+  <nav id="viewnav"></nav>
+</div></header>
+
+<main><div class="wrap">
+  <div class="stage">
+    <canvas id="canvas"></canvas>
+    <div id="progress"></div>
+    <div id="spinner">decoding <span class="n">130,899</span> Gaussians…</div>
+    <div id="message" hidden></div>
+    <div class="hud"><span id="fps">—</span> · <span id="camid"></span></div>
+  </div>
+
+  <dl class="facts">
+    <div class="fact"><dt>Method</dt><dd>3D Gaussian Splatting (Kerbl et al., 2023)</dd></div>
+    <div class="fact"><dt>Input</dt><dd>100 photographs, 5 Sep 2026, single lens</dd></div>
+    <div class="fact"><dt>Training</dt><dd>30,000 iterations, NVIDIA T4 ×2</dd></div>
+    <div class="fact"><dt>Primitive</dt><dd><span class="n">130,899</span> Gaussians — cropped from 886,055</dd></div>
+  </dl>
+
+  <p class="note">
+    Drag to orbit, or use the buttons below the model &mdash; <kbd>&#8984;</kbd>/<kbd>Ctrl</kbd>+scroll to zoom, <kbd>&#8679;</kbd>+drag to pan,
+    <kbd>,</kbd> and <kbd>.</kbd> to step between the photograph positions.
+    The view opens on the pose of <code>0002.jpg</code>.
+  </p>
+
+  <p class="note">
+    <strong>Measured at 30,000 iterations, against 13 held-out photographs:
+    PSNR 20.87 dB, SSIM 0.784, LPIPS 0.306.</strong> The same photographs scored 15.93 dB in the
+    previous run; the <strong>+4.93 dB</strong> came from removing the sky mask, not from more
+    training.
+  </p>
+
+  <dl class="facts">
+    <div class="fact"><dt>Whole frame</dt><dd>20.87 dB</dd></div>
+    <div class="fact"><dt>Previous run, sky masked</dt><dd>15.93 dB <span style="color:var(--muted)">(&minus;4.93)</span></dd></div>
+    <div class="fact"><dt>Worst held-out view</dt><dd>16.29 dB <span style="color:var(--muted)">(was 10.07)</span></dd></div>
+    <div class="fact"><dt>Best held-out view</dt><dd>25.11 dB</dd></div>
+  </dl>
+
+  <p class="note">
+    <strong>The object reconstructed; its surroundings still constrain the score.</strong> The
+    earlier sky mask was <em>view-inconsistent</em> — it fired on some frames and not on others, so
+    the same tree was painted black in one view and left textured in the next, and the model could
+    not satisfy both; removing it is what lifted the score. What remains is the framing: a
+    3.6-metre orbit around a single object gives almost no parallax on a lake, a treeline and buildings a hundred metres
+    away, so the far background is unconstrained by construction and renders as smear. A person
+    walking through roughly a third of the frames contributes as well.
+    <strong>None of this reaches the model above</strong>, which is cropped about the true vertical to the subject
+    about the lamp — the <span class="n">130,899</span> Gaussians you are looking at are drawn from the part that scores
+    20–30 dB, and the 890,000 discarded ones are the part that scores 10.
+  </p>
+
+  <p class="note">
+    Renderer: <strong>antimatter15/splat</strong>, MIT licensed, vendored in
+    <code>vendor/splat.js</code> with its licence. Modified only to read the model, the camera
+    poses and the opening view from embedded globals instead of <code>fetch()</code>, which a
+    <code>file://</code> page refuses.
+  </p>
+</div></main>
+
+<script src="splat_lamp.js"></script>
+<script>document.querySelectorAll(".n").forEach(e => e.textContent = window.SPLAT_COUNT.toLocaleString("en"));</script>
+<script src="vendor/splat.js"></script>
+<script src="nav.js"></script>
+<script src="orbit-ui.js"></script>
+</body>
+</html>

@@ -78,3 +78,8 @@ recon/objectcapture/usdz_snap
 # (GLB as a base64 JS global, tens of MB). Regenerable from the usdz by
 # recon/objectcapture/usdz_to_viewer_js.py; the vendored three.js stays.
 viewer/model_*.js
+viewer/splat_*.js
+
+# Rehearsal reconstructions from the USDZ experiments -- 1.4 GB of input
+# photographs and meshes, regenerable by recon/objectcapture/main.swift.
+test/

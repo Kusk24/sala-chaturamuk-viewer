@@ -500,6 +500,7 @@
     footer { width: calc(100% - 24px); padding-bottom: 20px; }
   }
 
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       scroll-behavior: auto !important;
@@ -516,7 +517,7 @@
   <h1>Sala Chaturamuk Phaichit — Image-Based Rendering Viewer</h1>
   <p>Novel viewpoints synthesized from photographs by optical-flow view interpolation. No 3D model.
      <span id="summary"></span></p>
-  <p class="compare-link"><a href="reconstruction.html">Compare with the 3D reconstruction (separate, photogrammetry) &rarr;</a></p>
+  <nav id="viewnav"></nav>
 </header>
 
 <main>
@@ -561,5 +562,6 @@
      file:// too, and so it can swap in a different version's manifest without
      a page reload -- see loadManifest()/loadVersionsList() in app.js. -->
 <script src="app.js"></script>
+<script src="nav.js"></script>
 </body>
 </html>
