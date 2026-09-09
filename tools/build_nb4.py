@@ -16,8 +16,9 @@ INFO = {
 | **Training, 30 000 iters** | **~1 h** |
 | Render + score | ~3 min |
 | **Total** | **~1 h 45 m** |
-| **With the September version attached** (COLMAP reused) | **~1 h 15 m** |""",
-   base='September run, sky mask on, 13 held-out views:  PSNR 15.93  SSIM 0.707  LPIPS 0.314',
+| Sky segmentation (SegFormer, 100 frames) | ~2 min |
+| **With the v6 version attached** (COLMAP reused) | **~1 h 15 m** |""",
+   base='v6 (no mask), 13 held-out views:  PSNR 20.87  SSIM 0.784  LPIPS 0.306   (v5, HSV mask: 15.93)',
    note="100 photographs, three orbit rings (Higher / Middle / Lower) shot 17:51-17:55, portrait "
         "1200x1600. The fold check reports each ring separately - the step *between* rings is a "
         "real move, not a fold.\n\n**Run this one first.** It exercises the whole pipeline in under "
@@ -33,8 +34,9 @@ INFO = {
 | **Training, 30 000 iters** | **~3-3.5 h** |
 | Render + score | ~10 min |
 | **Total** | **~6-7 h** |
-| **With the September version attached** (COLMAP reused) | **~2 h 15 m** |""",
-   base='September run, sky mask on, 50 held-out views:  PSNR 20.10  SSIM 0.739  LPIPS 0.342',
+| Sky segmentation (SegFormer, 446 frames) | ~4 min |
+| **With the v6 version attached** (COLMAP reused) | **~2 h 20 m** |""",
+   base='v6 (no mask), 50 held-out views:  PSNR 23.45  SSIM 0.769  LPIPS 0.333   (v5, HSV mask: 20.10)',
    note="446 photographs — Sala 360 (264) + Sala Inside (93) + Sala 360 Near (89), shot 17:13-17:41, "
         "landscape 1600x1200. **Three times the 146 images that scored 22.09 dB.**\n\n"
         "Training keeps the images on the CPU (`--data_device cpu`): 446 frames at 1600x1200 would "
@@ -57,8 +59,8 @@ def cells(host, subj):
 4. **Internet → On.** Without it `apt-get`, `git clone`, `pip install` and the VGG download for LPIPS all fail.
 5. **Save Version → Save & Run All (Commit).** Detached; closing the laptop cannot kill it.
 
-**To run this revision on the September COLMAP result:** *Add Input → Notebook Output → the
-September version of this notebook*, then Save & Run All. Extraction, matching and the mapper — the
+**To run this revision on the cached COLMAP result:** *Add Input → Notebook Output → the
+v6 (or September) version of this notebook*, then Save & Run All. Extraction, matching and the mapper — the
 expensive 2.5 h — are restored and skipped. **Training starts fresh on purpose:** the run tag `RUN`
 in cell 2 changed, so the old checkpoint is ignored and the new preprocessing actually takes effect.
 
@@ -110,14 +112,38 @@ the *correct* setting rather than the bug it was before.
 - **COLMAP 3.x / 4.x flag names** are detected, so an image upgrade does not break extraction.
 - **Scoring never crashes the run** — if `metrics.py` fails, PSNR/SSIM are computed directly.
 
-## What changed in this revision (`RUN = 'v6'`) — no new photographs
+## What changed in this revision (`RUN = 'v7'`) — the sky is masked properly
+
+v6 removed the sky *after* training, in space. Its held-out views still showed mid-sized sky
+Gaussians as wisps around the roof: the size filter only catches the huge ones. v7 stops them
+being created:
+
+- **Semantic sky masks.** A pre-trained segmentation network (SegFormer-B2, ADE20K) labels the
+  sky in every frame — consistently, which the v5 colour heuristic was not. The mask goes into the
+  training image as an **alpha channel**, the route 3DGS's own loader supports: masked pixels give
+  **zero gradient**, so nothing is ever pushed to exist there. Nothing is painted black; the ground
+  truth is untouched. A pixel masked in one view and not in another is one fewer observation, not a
+  contradiction — that is why this tolerates an imperfect mask where v5 could not.
+- **No sky points in the initialisation.** Every COLMAP sparse point observed in the sky is
+  dropped before 3DGS reads the scene — the effect of COLMAP's own mask option, without repeating
+  the 2.5 h of COLMAP.
+- **Two scores.** `metrics.py` scores every pixel, sky included; a model that renders no sky
+  *must* lose on that number even as it visibly improves. So the held-out views are also scored on
+  the subject only, and both are reported (`results.json`, `results_subject.json`).
+- The crop, size filter and upright export from v6 stay: a Gaussian that drifts *into* the sky is
+  not penalised either, so a few can still survive and are removed in space as before.
+
+Not done: modelling the sky (a learned background / "haze"). Vanilla 3DGS has no such term; that
+is a different codebase (WildGaussians and the like), not a setting.
+
+## What v6 changed — no new photographs
 
 Measured on the September models, not guessed:
 
-- **The sky mask is off.** It fired on some frames and not others, so the same overcast sky was
-  textured in one photograph and black in the next. The model could not satisfy both and lost
-  **2.2–2.4 dB** on every held-out score — about forty times what doubling the training budget
-  would buy. The sky is now trained as part of the scene and removed afterwards, in space.
+- **The v5 sky mask was turned off.** It fired on some frames and not others, so the same
+  overcast sky was textured in one photograph and black in the next. The model could not satisfy
+  both and lost **2.2–2.4 dB** on every held-out score. Sala went 20.10 → 23.45 dB, lamp
+  15.93 → 20.87 dB, with the worst views improving most.
 - **The crop is about the true vertical.** COLMAP's y-axis was 15.5° (sala) / 29.3° (lamp) off
   vertical, so the old crop cylinder sliced diagonally through the subject and took the lamp's base
   with it. The vertical is now derived from the cameras' own up axes.
@@ -181,7 +207,7 @@ import os, glob, zipfile, shutil, time, csv, subprocess, collections
 
 # ============================ RUN SETTINGS ============================
 SUBJECT  = '{subj}'   # fixed: this file is {subj} only
-RUN      = 'v6'       # training/output tag - bump it to retrain from scratch while COLMAP stays cached
+RUN      = 'v7'       # training/output tag - bump it to retrain from scratch while COLMAP stays cached
 SUBMODEL = None       # None = largest COLMAP sub-model; '1' = the second one (sala: the interior)
 FORCE    = set()      # e.g. {{'matching','mapper'}} to recompute a COLMAP stage
 # ======================================================================
@@ -198,17 +224,22 @@ CFG = {{
   #               corner); it sits BELOW its ring, so a tight keep_h=0.6 trims terrace and sky.
   # floater     : drop gaussians whose largest axis exceeds this x ring. At 0.04 that is
   #               ~1% of them, holding ~80% of the volume - sky and far background.
-  # sky         : paint the sky black before training. OFF: measured to cost 2.2-2.4 dB.
+  # sky         : 'seg' = semantic sky mask (SegFormer) as an alpha channel, zero gradient in
+  #               the sky and no sky points in the initialisation. 'hsv' = the v5 heuristic that
+  #               painted the sky black (cost 2.2-2.4 dB). False = train the sky and crop it
+  #               away afterwards (v6).
   # exposure    : --train_test_exp, per-image exposure fitting. Changes the scoring
   #               protocol (right halves of held-out frames only), so off by default.
   # data_device : where 3DGS keeps the training images. 446 frames at 1600x1200 are
   #               ~10 GB on the GPU; the README recommends cpu for large sets.
-  'sala': dict(overlap=10, keep_r=1.10, keep_h=1.00, floater=0.04, sky=False, exposure=False, data_device='cpu'),
-  'lamp': dict(overlap=14, keep_r=0.50, keep_h=0.60, floater=0.04, sky=False, exposure=False, data_device='cuda'),
-  'far':  dict(overlap=10, keep_r=1.20, keep_h=1.00, floater=0.04, sky=False, exposure=False, data_device='cpu'),
+  'sala': dict(overlap=10, keep_r=1.10, keep_h=1.00, floater=0.04, sky='seg', exposure=False, data_device='cpu'),
+  'lamp': dict(overlap=14, keep_r=0.50, keep_h=0.60, floater=0.04, sky='seg', exposure=False, data_device='cuda'),
+  'far':  dict(overlap=10, keep_r=1.20, keep_h=1.00, floater=0.04, sky='seg', exposure=False, data_device='cpu'),
 }}
 assert SUBJECT in CFG, SUBJECT
 CF = CFG[SUBJECT]
+SKY = {{True: 'hsv', False: 'off', None: 'off'}}.get(CF['sky'], CF['sky'])
+assert SKY in ('seg', 'hsv', 'off'), SKY
 {host_block.strip()}
 SCENE = f'{{WORK}}/scene'; SRC = f'{{SCENE}}/input'; DB = f'{{SCENE}}/database.db'
 TAG = SUBJECT + (f'_sub{{SUBMODEL}}' if SUBMODEL else '')        # output filename stem
@@ -474,8 +505,8 @@ else:
     md("## 9 · Undistort to a pinhole camera, then lay it out the way 3DGS reads it")
     co(r"""
 PIN = f'{WORK}/scene_pinhole'
-if not CF['sky'] and os.path.exists(f'{PIN}/.sky_removed'):
-    print('scratch images were sky-masked by an earlier run in this session - rebuilding them clean')
+if SKY != 'hsv' and os.path.exists(f'{PIN}/.sky_removed'):
+    print('scratch images were painted black by an earlier run in this session - rebuilding them clean')
     shutil.rmtree(PIN)
 if os.path.exists(f'{PIN}/images') and len(glob.glob(f'{PIN}/images/*')) >= len(pos) - 2:
     print('already undistorted, skipping')
@@ -499,58 +530,149 @@ assert glob.glob(f'{sp}/0/images.*') and glob.glob(f'{sp}/0/cameras.*'), 'sparse
 """)
 
     md(r"""
-## 10 · Sky — trained, not masked
+## 10 · Sky — segmented, and handed to 3DGS as an alpha channel
 
-The previous revision painted the sky black with an HSV/gradient mask. Measured on the September
-models, that mask fired on some frames and not on others — the same overcast sky left textured in
-one photograph and black in the next — and the model, unable to satisfy both, lost **2.2–2.4 dB**
-on every held-out score. Roughly forty times what doubling the training budget would buy.
+Three sky strategies have now been measured on this capture:
 
-So it is **off**. The sky is trained like any other part of the scene: seen from a full orbit it
-settles as a distant dome far outside the crop radius, and the few large, transparent Gaussians
-that drift closer are removed by the size filter in cell 14. `sky=True` in cell 2 restores the old
-behaviour if you want the comparison. Either way a contact sheet of the actual training images is
-written to the output.
+| | how | result |
+|---|---|---|
+| v5 | HSV + gradient heuristic, sky painted black | fired inconsistently; **−2.2 to −2.4 dB** |
+| v6 | no mask; crop and size-filter the sky away in space afterwards | +3.35 / +4.93 dB, but mid-sized sky wisps survive |
+| **v7** | **SegFormer-B2 (ADE20K) sky mask as alpha; sparse sky points dropped** | this run |
+
+The mask is written into the alpha channel of a copy of each training image. 3DGS's loader keeps
+a fourth channel as `alpha_mask` and multiplies the *render* by it before the loss — the ground
+truth is never touched — so a masked pixel contributes no gradient at all. That is the difference
+from v5: nothing is told "the sky is black", the sky is simply unobserved. The sky mask is eroded
+by a few pixels so a wobbly boundary costs a thin rim of sky rather than the roofline.
+
+The same masks then remove every COLMAP sparse point that was observed in the sky, so 3DGS's
+initial Gaussians contain none — the equivalent of running COLMAP with a sky mask, without
+repeating 2.5 h of COLMAP. `sky='hsv'` / `sky=False` in cell 2 reproduce v5 / v6.
 """)
     co(r"""
-import numpy as np, cv2
-V_MIN, S_MAX, ERODE = 140, 50, 9
-MARK = f'{PIN}/.sky_removed'
-
-def sky_mask(img):
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV); S, V = hsv[...,1], hsv[...,2]
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    grad = cv2.magnitude(cv2.Sobel(gray, cv2.CV_32F,1,0,ksize=3),
-                         cv2.Sobel(gray, cv2.CV_32F,0,1,ksize=3))
-    smooth = cv2.blur((grad < 25).astype(np.uint8), (9,9)) > 0.7
-    cand = ((S < S_MAX) & (V > V_MIN) & smooth).astype(np.uint8)
-    cand = cv2.morphologyEx(cand, cv2.MORPH_CLOSE, np.ones((7,7), np.uint8))
-    _, lab = cv2.connectedComponents(cand)
-    top = set(np.unique(lab[: img.shape[0]//20])) - {0}
-    return cv2.erode(np.isin(lab, list(top)).astype(np.uint8), np.ones((ERODE,ERODE), np.uint8))
-
+import numpy as np, cv2, time
+from PIL import Image
+SEG_MODEL, SEG_LONG, SKY_ID, ERODE = 'nvidia/segformer-b2-finetuned-ade-512-512', 1024, 2, 6
+MASKS = f'{PIN}/masks'          # 8-bit PNG per frame: 255 = subject (trained), 0 = sky (ignored)
+ALPHA = f'{PIN}/images_alpha'   # training copies of the images with that mask as alpha
 files = sorted(glob.glob(f'{PIN}/images/*'))
-if not CF['sky']:
-    print('sky mask OFF - the sky is trained with the scene and removed in space by cell 14')
-elif os.path.exists(MARK):
-    print('sky already removed, skipping')
+
+def stem(p): return os.path.splitext(os.path.basename(p))[0]
+
+def segment_sky(paths):
+    import torch
+    from transformers import SegformerForSemanticSegmentation
+    dev = 'cuda' if torch.cuda.is_available() else 'cpu'
+    net = SegformerForSemanticSegmentation.from_pretrained(SEG_MODEL).to(dev).eval()
+    mean = torch.tensor([0.485, 0.456, 0.406], device=dev).view(1, 3, 1, 1)
+    std  = torch.tensor([0.229, 0.224, 0.225], device=dev).view(1, 3, 1, 1)
+    k = np.ones((2 * ERODE + 1, 2 * ERODE + 1), np.uint8); frac = []; t0 = time.time()
+    for i, p in enumerate(paths):
+        im = cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB); H, W = im.shape[:2]
+        sc = SEG_LONG / max(H, W); h, w = int(round(H * sc / 32)) * 32, int(round(W * sc / 32)) * 32
+        x = torch.from_numpy(cv2.resize(im, (w, h), interpolation=cv2.INTER_AREA)).to(dev)
+        x = x.permute(2, 0, 1)[None].float() / 255
+        with torch.no_grad():
+            lg = net(pixel_values=(x - mean) / std).logits                       # 1 x 150 x h/4 x w/4
+            lg = torch.nn.functional.interpolate(lg, size=(H, W), mode='bilinear', align_corners=False)
+            sky = (lg.argmax(1)[0] == SKY_ID).to(torch.uint8).cpu().numpy()
+        sky = cv2.erode(sky, k)                       # shrink the SKY: silhouettes keep a rim of sky, never lose edge pixels
+        keep = ((1 - sky) * 255).astype(np.uint8)
+        cv2.imwrite(f'{MASKS}/{stem(p)}.png', keep)
+        # PNG bytes under the ORIGINAL name: 3DGS looks the file up by the name in COLMAP's
+        # images.bin, and PIL reads the format from the header, not from the suffix
+        Image.fromarray(np.dstack([im, keep])).save(f'{ALPHA}/{os.path.basename(p)}', format='PNG')
+        frac.append(sky.mean())
+        if i % 50 == 0 or i == len(paths) - 1:
+            print(f'  {i + 1:4d}/{len(paths)}  sky {sky.mean() * 100:5.1f}%   {time.time() - t0:5.0f} s')
+    return np.array(frac)
+
+def filter_sparse_points(sp0):
+    # drop every sparse point that COLMAP observed in a sky pixel (majority of its views).
+    # 3DGS reads sparse/0/points3D.ply if it exists, so the filtered cloud is written there.
+    if not os.path.exists(f'{sp0}/images.txt'):
+        assert sh(f'colmap model_converter --input_path {sp0} --output_path {sp0} --output_type TXT > /dev/null') == 0
+    masks = {}
+    def mask_of(name):
+        if name not in masks: masks[name] = cv2.imread(f'{MASKS}/{os.path.splitext(name)[0]}.png', 0) > 127
+        return masks[name]
+    n_obs, n_sky = collections.Counter(), collections.Counter()
+    lines = [l for l in open(f'{sp0}/images.txt') if not l.startswith('#') and l.strip()]
+    for hdr, pts in zip(lines[0::2], lines[1::2]):
+        name = hdr.split()[9]; m = mask_of(name); H, W = m.shape; v = pts.split()
+        xs = np.array(v[0::3], float); ys = np.array(v[1::3], float); ids = np.array(v[2::3], int)
+        ok = ids >= 0; xs = np.clip(xs[ok].round().astype(int), 0, W - 1); ys = np.clip(ys[ok].round().astype(int), 0, H - 1)
+        insky = ~m[ys, xs]
+        for pid, sk in zip(ids[ok], insky): n_obs[pid] += 1; n_sky[pid] += int(sk)
+    xyz, rgb, kept, total = [], [], 0, 0
+    for l in open(f'{sp0}/points3D.txt'):
+        if l.startswith('#') or not l.strip(): continue
+        v = l.split(); pid = int(v[0]); total += 1
+        if n_sky[pid] * 2 > n_obs[pid]: continue            # seen in the sky in most of its views
+        xyz.append([float(v[1]), float(v[2]), float(v[3])]); rgb.append([int(v[4]), int(v[5]), int(v[6])]); kept += 1
+    xyz = np.array(xyz, np.float32); rgb = np.array(rgb, np.uint8)
+    arr = np.zeros(kept, dtype=[('x','<f4'),('y','<f4'),('z','<f4'),('nx','<f4'),('ny','<f4'),('nz','<f4'),
+                                ('red','u1'),('green','u1'),('blue','u1')])
+    arr['x'], arr['y'], arr['z'] = xyz.T; arr['red'], arr['green'], arr['blue'] = rgb.T
+    with open(f'{sp0}/points3D.ply', 'wb') as f:
+        f.write(('ply\nformat binary_little_endian 1.0\nelement vertex %d\n' % kept
+                 + ''.join(f'property float {c}\n' for c in ('x','y','z','nx','ny','nz'))
+                 + ''.join(f'property uchar {c}\n' for c in ('red','green','blue')) + 'end_header\n').encode())
+        f.write(arr.tobytes())
+    return kept, total
+
+MARK = f'{PIN}/.sky_removed'
+if SKY == 'seg':
+    os.makedirs(MASKS, exist_ok=True); os.makedirs(ALPHA, exist_ok=True)
+    todo = [p for p in files if not (os.path.exists(f'{ALPHA}/{os.path.basename(p)}') and os.path.exists(f'{MASKS}/{stem(p)}.png'))]
+    if todo:
+        print(f'segmenting the sky in {len(todo)} frames with {SEG_MODEL}')
+        frac = segment_sky(todo)
+        print(f'sky: mean {frac.mean() * 100:.1f}% of each frame (min {frac.min() * 100:.1f}%, max {frac.max() * 100:.1f}%)')
+    else:
+        print('sky masks already built, skipping')
+    a = Image.open(f'{ALPHA}/{os.path.basename(files[0])}'); assert a.mode == 'RGBA', a.mode
+    kept, total = filter_sparse_points(f'{PIN}/sparse/0')
+    print(f'sparse points: {kept:,} of {total:,} kept ({(total - kept) / max(total, 1) * 100:.1f}% were observed in the sky)')
+    json.dump(dict(model=SEG_MODEL, long_edge=SEG_LONG, erode=ERODE, sparse_total=total, sparse_kept=kept),
+              open(f'{OUT}/sky_mask.json', 'w'), indent=2)
+elif SKY == 'hsv':
+    V_MIN, S_MAX, HSV_ERODE = 140, 50, 9
+    def sky_mask(img):
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV); S, V = hsv[..., 1], hsv[..., 2]
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        grad = cv2.magnitude(cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3), cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3))
+        smooth = cv2.blur((grad < 25).astype(np.uint8), (9, 9)) > 0.7
+        cand = ((S < S_MAX) & (V > V_MIN) & smooth).astype(np.uint8)
+        cand = cv2.morphologyEx(cand, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
+        _, lab = cv2.connectedComponents(cand)
+        top = set(np.unique(lab[: img.shape[0] // 20])) - {0}
+        return cv2.erode(np.isin(lab, list(top)).astype(np.uint8), np.ones((HSV_ERODE, HSV_ERODE), np.uint8))
+    if os.path.exists(MARK): print('sky already painted black, skipping')
+    else:
+        frac = []
+        for p in files:
+            im = cv2.imread(p); m = sky_mask(im); im[m.astype(bool)] = 0
+            cv2.imwrite(p, im, [cv2.IMWRITE_JPEG_QUALITY, 95]); frac.append(m.mean())
+        open(MARK, 'w').write('done'); frac = np.array(frac)
+        print(f'sky painted black: mean {frac.mean() * 100:.1f}% per frame')
 else:
-    frac = []
-    for p in files:
-        im = cv2.imread(p); m = sky_mask(im); im[m.astype(bool)] = 0
-        cv2.imwrite(p, im, [cv2.IMWRITE_JPEG_QUALITY, 95]); frac.append(m.mean())
-    open(MARK,'w').write('done'); frac = np.array(frac)
-    print(f'sky removed: mean {frac.mean()*100:.1f}% per frame (min {frac.min()*100:.1f}%, max {frac.max()*100:.1f}%)')
+    print('sky mask OFF (v6 behaviour) - the sky is trained with the scene and removed in space by cell 14')
 
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-sel = files[::max(1,len(files)//8)][:8]
-fig, ax = plt.subplots(2,4, figsize=(16,6))
-for a,p in zip(ax.ravel(), sel):
-    a.imshow(cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB)); a.axis('off'); a.set_title(os.path.basename(p), fontsize=8)
+sel = files[::max(1, len(files) // 8)][:8]
+fig, ax = plt.subplots(2, 4, figsize=(16, 6))
+for a, p in zip(ax.ravel(), sel):
+    im = cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB)
+    if SKY == 'seg':
+        sky = cv2.imread(f'{MASKS}/{stem(p)}.png', 0) < 128
+        im = im.copy(); im[sky] = (0.45 * im[sky] + 0.55 * np.array([255, 40, 40])).astype(np.uint8)
+    a.imshow(im); a.axis('off'); a.set_title(os.path.basename(p), fontsize=8)
+plt.suptitle('training frames' + (' - red = sky, ignored by the loss' if SKY == 'seg' else ''), fontsize=10)
 plt.tight_layout(); plt.savefig(f'{OUT}/training_contact_sheet.png', dpi=90); plt.show()
 """)
-
     md("## 11 · Install 3D Gaussian Splatting")
     co(r"""
 os.environ['TORCH_CUDA_ARCH_LIST'] = '7.5'      # T4
@@ -581,7 +703,9 @@ with the images moved to CPU and densification made gentler, up to two times. An
 stops the run with the last 60 lines of output.
 
 `--eval` holds out every 8th photograph, so the scores in the next cell are against images the
-model never saw. `exposure=True` in cell 2 adds `--train_test_exp`: a per-image affine colour
+model never saw. With `sky='seg'`, `-i images_alpha` points 3DGS at the RGBA copies from cell 10;
+its loader keeps the fourth channel as `alpha_mask` and the render is multiplied by it before the
+loss, so sky pixels contribute nothing. `exposure=True` in cell 2 adds `--train_test_exp`: a per-image affine colour
 correction is learned during training, absorbing auto-exposure drift between frames. It also
 changes the scoring protocol — the held-out photographs' *left* halves are used to fit their
 exposure and scores are computed on the *right* halves — so its numbers are not directly comparable
@@ -612,6 +736,7 @@ def run_train(extra):
            f' --save_iterations 7000 15000 30000'
            f' --checkpoint_iterations 5000 10000 15000 20000 25000 30000'
            f' --test_iterations -1 --disable_viewer {extra}'
+           + (' -i images_alpha' if SKY == 'seg' else '')
            + (' --train_test_exp' if CF.get('exposure') else '')
            + (f' --start_checkpoint {resume}' if resume else ''))
     print('\n>>>', cmd, '\n')
@@ -650,9 +775,14 @@ print('models written:', sorted(os.path.basename(os.path.dirname(p)) for p in pl
 """)
 
     md(r"""
-## 13 · Render the held-out views and score them
+## 13 · Render the held-out views and score them — twice
 
-Only the test set is rendered (`--skip_train`); that is all `metrics.py` reads. LPIPS needs a VGG
+Only the test set is rendered (`--skip_train`); that is all `metrics.py` reads. `metrics.py`
+scores **every pixel, sky included**, and a model trained not to render the sky must lose there.
+So the same renders are scored a second time on the subject pixels only, using the cell-10 masks,
+and both numbers are kept: the full-frame one is comparable with v5/v6, the subject-only one is
+the honest measure of this revision. Note `metrics.py` reads the held-out photographs in sorted
+name order, so mask *i* is the *i*-th name — checked by count. LPIPS needs a VGG
 download the first time, so if `metrics.py` fails for any reason, PSNR and SSIM are computed
 directly from the renders instead of letting a scoring hiccup end a six-hour run.
 """)
@@ -684,6 +814,32 @@ else:
     res = {os.path.basename(td): {'PSNR': float(np.mean(ps)), 'SSIM': float(np.mean(ss)) if ss else None, 'LPIPS': None, 'n_test': len(ps)}}
     json.dump(res, open(RES,'w'), indent=2); print(json.dumps(res, indent=2))
 print('\nbaseline to beat - ' + BASELINE)
+
+# ---- subject-only score: same renders, sky pixels excluded ----------------------------------
+if SKY == 'seg':
+    import numpy as np, cv2
+    names = sorted(os.path.basename(p) for p in glob.glob(f'{PIN}/images/*'))[::8]   # 3DGS: sorted names, every 8th
+    td = sorted(glob.glob(f'{MODEL_DIR}/test/ours_*'), key=lambda p: int(p.rsplit('_', 1)[1]))[-1]
+    rend = sorted(glob.glob(f'{td}/renders/*.png'))
+    assert len(rend) == len(names), (len(rend), len(names))
+    rows = []
+    for i, nm in enumerate(names):
+        r = cv2.imread(rend[i]).astype(np.float64); g = cv2.imread(f'{td}/gt/{os.path.basename(rend[i])}').astype(np.float64)
+        m = cv2.imread(f'{MASKS}/{os.path.splitext(nm)[0]}.png', 0) > 127
+        if CF.get('exposure'): m = m[:, m.shape[1] // 2:]                 # right-halves protocol
+        if m.shape != r.shape[:2]: m = cv2.resize(m.astype(np.uint8), (r.shape[1], r.shape[0]), interpolation=cv2.INTER_NEAREST) > 0
+        se = (r - g) ** 2
+        full = 10 * np.log10(255 ** 2 / se.mean())
+        subj = 10 * np.log10(255 ** 2 / se[m].mean()) if m.any() else float('nan')
+        rows.append(dict(name=nm, psnr_full=round(full, 3), psnr_subject=round(subj, 3), sky_frac=round(float(1 - m.mean()), 4)))
+    P = np.array([r['psnr_subject'] for r in rows]); F = np.array([r['psnr_full'] for r in rows])
+    summ = dict(n_test=len(rows), psnr_full=float(F.mean()), psnr_subject=float(np.nanmean(P)),
+                psnr_subject_min=float(np.nanmin(P)), psnr_subject_median=float(np.nanmedian(P)),
+                mean_sky_frac=float(np.mean([r['sky_frac'] for r in rows])), per_view=rows)
+    json.dump(summ, open(f'{MODEL_DIR}/results_subject.json', 'w'), indent=2)
+    print(f'\nsubject-only PSNR (sky excluded): {summ["psnr_subject"]:.2f} dB   '
+          f'(min {summ["psnr_subject_min"]:.2f}, median {summ["psnr_subject_median"]:.2f})   '
+          f'full-frame {summ["psnr_full"]:.2f} dB   sky = {summ["mean_sky_frac"] * 100:.0f}% of a held-out frame')
 """)
 
     md(r"""
@@ -852,7 +1008,7 @@ for src, nm in ((SRC_PLY, f'{TAG}_full'), (FINAL, f'{TAG}_final')):
     d = f'{OUT}/{nm}.splat'; n = ply_to_splat(src, d)
     print(f'{nm}.splat  {n:,} gaussians  {os.path.getsize(d)/1e6:.1f} MB')
 shutil.copy(SRC_PLY, f'{OUT}/{TAG}_full.ply')
-for f in ('cameras.json', 'results.json', 'cfg_args', 'per_view.json'):
+for f in ('cameras.json', 'results.json', 'results_subject.json', 'cfg_args', 'per_view.json'):
     p = f'{MODEL_DIR}/{f}'
     if os.path.exists(p): shutil.copy(p, f'{OUT}/{f}')
 if os.path.isdir(f'{MODEL_DIR}/test'):
@@ -911,7 +1067,9 @@ print(f'\n=== {TAG} finished. Download splat_{TAG}.js, {TAG}_final.ply, results.
 
 1. **`out_{subj}/splat_{subj}.js`** — drop into `viewer/`; `{subj}.html` loads it. Cameras and opening view included.
 2. **`out_{subj}/{subj}_final.ply`** — open in SuperSplat. Upright, cropped, floaters removed, full SH.
-3. **`out_{subj}/results.json`** — held-out PSNR / SSIM / LPIPS for the paper.
+3. **`out_{subj}/results.json`** — held-out PSNR / SSIM / LPIPS, every pixel (comparable with v5/v6).
+   **`out_{subj}/results_subject.json`** — the same views scored on the subject only, per view.
+   `out_{subj}/sky_mask.json` — segmenter, erosion, and how many sparse points were sky.
 4. **`out_{subj}/{subj}_heldout_renders.zip`** — render-versus-photograph pairs, paper figures.
 5. **`out_{subj}/frame.json`** — the vertical, its tilt, crop bounds and counts that produced the final model.
 6. `out_{subj}/training_contact_sheet.png` — what the model was actually trained on.

@@ -1,3 +1,5 @@
+> **Revision v7 (9 Sep 2026, `*_sep05.ipynb`).** The sky is masked properly: SegFormer-B2 (ADE20K) labels it in every frame, the mask goes into the training images as an alpha channel (zero gradient in the sky, nothing painted black), and every COLMAP sparse point seen in the sky is dropped before 3DGS starts. Held-out views are scored twice: full frame (`results.json`, comparable with v5/v6) and subject only (`results_subject.json`). Attach the v6 version as input and COLMAP is reused; training restarts because `RUN` changed. `sky='hsv'` / `sky=False` in cell 2 reproduce v5 / v6.
+>
 > **Revision v6 (8 Sep 2026).** Sky mask off (it cost 2.2–2.4 dB), crop about the true vertical, floaters removed, model exported upright with rotated spherical harmonics, `splat_<subject>.js` written for the viewer. Attach the September version as input and COLMAP is reused; training restarts because `RUN` changed. Options `exposure` and `SUBMODEL` in cell 2.
 
 # Running the 352-image Gaussian splatting on Google Colab
