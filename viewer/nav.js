@@ -1,16 +1,17 @@
-// One navigation for every viewer page, so the set can grow without seven
+// One navigation for every viewer page, so the set can grow without eight
 // copies drifting apart. Each page carries <nav id="viewnav"></nav>; this fills
 // it in and marks the current page. Plain script, no build step, works over
 // file:// like the rest of the viewer.
 (function () {
   var PAGES = [
-    { href: 'index.html',          group: 'Image-based rendering', name: 'Interpolation', note: '13.88 dB' },
-    { href: 'sala.html',           group: 'Gaussian splatting',    name: 'Sala · v6',     note: 'unmasked · 23.45 dB' },
-    { href: 'sala_v5.html',        group: 'Gaussian splatting',    name: 'Sala · v5',     note: 'masked · 20.10 dB' },
-    { href: 'lamp.html',           group: 'Gaussian splatting',    name: 'Lamp · v6',     note: 'unmasked · 20.87 dB' },
-    { href: 'lamp_v5.html',        group: 'Gaussian splatting',    name: 'Lamp · v5',     note: 'masked · 15.93 dB' },
-    { href: 'splat.html',          group: 'Gaussian splatting',    name: 'August',        note: '22.09 dB' },
-    { href: 'reconstruction.html', group: 'Photogrammetry',        name: 'Mesh',          note: 'Object Capture' }
+    { href: 'index.html',          group: 'Image-based rendering', name: 'Interpolation',      note: '13.88 dB' },
+    { href: 'sala_skymask.html',   group: 'Gaussian splatting',    name: 'Sala · sky masked',  note: 'pavilion 22.61 dB' },
+    { href: 'sala.html',           group: 'Gaussian splatting',    name: 'Sala · sky trained', note: 'pavilion 22.34 dB' },
+    { href: 'sala_v5.html',        group: 'Gaussian splatting',    name: 'Sala · sky blacked', note: 'whole frame 20.10 dB' },
+    { href: 'lamp.html',           group: 'Gaussian splatting',    name: 'Lamp · sky trained', note: 'whole frame 20.87 dB' },
+    { href: 'lamp_v5.html',        group: 'Gaussian splatting',    name: 'Lamp · sky blacked', note: 'whole frame 15.93 dB' },
+    { href: 'splat.html',          group: 'Gaussian splatting',    name: 'August',             note: '22.09 dB' },
+    { href: 'reconstruction.html', group: 'Photogrammetry',        name: 'Mesh',               note: 'Object Capture' }
   ];
 
   var CSS = [

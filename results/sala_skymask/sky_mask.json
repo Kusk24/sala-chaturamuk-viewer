@@ -1,0 +1,7 @@
+{
+  "model": "nvidia/segformer-b2-finetuned-ade-512-512",
+  "long_edge": 1024,
+  "erode": 6,
+  "sparse_total": 240357,
+  "sparse_kept": 238948
+}

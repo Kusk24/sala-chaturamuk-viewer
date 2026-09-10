@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sala Chaturamuk Phaichit — Gaussian Splatting, September capture</title>
+<title>Sala Chaturamuk Phaichit — Gaussian Splatting, sky masked</title>
 <style>
   /* Third comparison page (CLAUDE.md amendment 2026-08-29): a 3D Gaussian
      Splatting radiance field from the same photographs, shown alongside the
@@ -93,13 +93,14 @@
 </head>
 <body>
 <header><div class="wrap">
-  <h1>Sala Chaturamuk Phaichit <span class="badge">September capture</span></h1>
+  <h1>Sala Chaturamuk Phaichit <span class="badge">sky masked</span></h1>
   <p class="lede">
-    The pavilion rebuilt from the <em>5 September 2026</em> re-capture — one camera, one lens,
-    one 28-minute walk. <em><span class="n">275,985</span> Gaussians</em> optimised for 30,000 iterations. This replaces
-    the earlier reconstruction on the <a href="splat.html">comparison page</a>, which was built
-    from 146 photographs of an August capture; the two are kept separate rather than merged,
-    because mixing captures is what broke every earlier attempt.
+    The same photographs and the same optimiser as the
+    <a href="sala.html">run beside it</a>, with one change: a segmentation network labels the
+    sky in every frame and those pixels are <em>excluded from the loss</em>, so the optimiser is
+    never rewarded for building geometry there. <em><span class="n">597,067</span> Gaussians</em>
+    after 30,000 iterations. Both runs are kept, because the change is small on the building and
+    large in the empty space around it, and only a pair shows that.
   </p>
   <nav id="viewnav"></nav>
 </div></header>
@@ -108,7 +109,7 @@
   <div class="stage">
     <canvas id="canvas"></canvas>
     <div id="progress"></div>
-    <div id="spinner">decoding <span class="n">275,985</span> Gaussians…</div>
+    <div id="spinner">decoding <span class="n">597,067</span> Gaussians…</div>
     <div id="message" hidden></div>
     <div class="hud"><span id="fps">—</span> · <span id="camid"></span></div>
   </div>
@@ -116,55 +117,76 @@
   <dl class="facts">
     <div class="fact"><dt>Method</dt><dd>3D Gaussian Splatting (Kerbl et al., 2023)</dd></div>
     <div class="fact"><dt>Input</dt><dd>395 exterior photographs<br><span style="color:var(--muted)">51 interior frames unlinked</span></dd></div>
-    <div class="fact"><dt>Training</dt><dd>30,000 iterations, NVIDIA T4 ×2</dd></div>
-    <div class="fact"><dt>Primitive</dt><dd><span class="n">275,985</span> Gaussians — cropped from 639,346, no mesh</dd></div>
+    <div class="fact"><dt>Training</dt><dd>30,000 iterations, NVIDIA T4 ×2<br><span style="color:var(--muted)">sky excluded from the loss</span></dd></div>
+    <div class="fact"><dt>Primitive</dt><dd><span class="n">597,067</span> Gaussians — cropped from 649,217, no mesh</dd></div>
   </dl>
 
   <p class="note">
     Drag to orbit, or use the buttons below the model &mdash; <kbd>&#8984;</kbd>/<kbd>Ctrl</kbd>+scroll to zoom, <kbd>&#8679;</kbd>+drag to pan,
     <kbd>,</kbd> and <kbd>.</kbd> to step between photograph positions. The view opens on
-    <code>0012.jpg</code>, square on to the front elevation.
+    <code>0176.jpg</code>, the photograph with most of the pavilion in frame.
   </p>
 
   <p class="note">
-    <strong>Measured at 30,000 iterations, against 50 held-out photographs:
-    PSNR 23.45 dB, SSIM 0.769, LPIPS 0.333.</strong> The same photographs, the same
-    optimiser and the same held-out set scored 20.10 dB in the previous run; the
-    <strong>+3.35 dB</strong> came from removing the sky mask, not from more training.
+    <strong>The headline number falls, and that is expected.</strong> Scored the standard way,
+    over every pixel of 50 held-out photographs, this run reads
+    <strong>14.45 dB</strong> against 23.45 dB for the run beside it. The model was trained not to
+    put anything in the sky, so it renders nothing there, while the photograph it is compared
+    against is roughly <strong>28% sky</strong>. The score is measuring an absence that was asked for.
   </p>
 
   <p class="note">
-    <strong>A later run masks the sky out of the loss entirely</strong> — see
-    <a href="sala_skymask.html">the sky-masked reconstruction</a>. Compared on the pavilion pixels
-    alone, the same 50 photographs, that run scores 22.61 dB against <strong>22.34 dB</strong> here,
-    and carries far less floating geometry in the empty space. The 23.45 dB below is the whole
-    frame, sky included, which is not comparable with it: sky is about 28% of a photograph and is
-    easy to fit, so it lifts this number and cannot lift that one.
+    <strong>Scored on the pavilion only — the same pixels, the same 50 photographs, both
+    models — it is 22.61 dB against 22.34 dB, better in 42 of the 50 views.</strong>
+    A real improvement, but a small one: masking the sky does not make the building sharper,
+    it stops the optimiser spending Gaussians on something it can never get right.
   </p>
 
   <dl class="facts">
-    <div class="fact"><dt>Whole frame</dt><dd>23.45 dB</dd></div>
-    <div class="fact"><dt>Pavilion pixels only</dt><dd>22.34 dB</dd></div>
-    <div class="fact"><dt>Previous run, sky masked</dt><dd>20.10 dB <span style="color:var(--muted)">(&minus;3.35)</span></dd></div>
-    <div class="fact"><dt>Worst held-out view</dt><dd>14.78 dB <span style="color:var(--muted)">(was 10.45)</span></dd></div>
-    <div class="fact"><dt>Best held-out view</dt><dd>27.80 dB</dd></div>
+    <div class="fact"><dt>Pavilion pixels</dt><dd>22.61 dB <span style="color:var(--muted)">(sky trained: 22.34)</span></dd></div>
+    <div class="fact"><dt>Whole frame</dt><dd>14.45 dB <span style="color:var(--muted)">— includes empty sky</span></dd></div>
+    <div class="fact"><dt>Views improved</dt><dd>42 of 50 <span style="color:var(--muted)">(best +2.33 dB, worst &minus;0.64)</span></dd></div>
+    <div class="fact"><dt>Sky pixels in a frame</dt><dd>28% on average <span style="color:var(--muted)">(1% to 47%)</span></dd></div>
   </dl>
 
   <p class="note">
-    That earlier mask was <em>view-inconsistent</em> — it fired on some frames and not on others,
-    so the same treeline was black in one photograph and textured in the next, and the model could
-    not satisfy both. Training the sky with the scene and removing it afterwards in space cost
-    nothing and lifted every view, the worst ones most. Two limits remain, both in the
-    photographs rather than the optimiser. First, COLMAP split the capture into
-    <strong>two disconnected sub-models, and only the larger was trained</strong>.
-    The 51 photographs left out are not a random scatter — they are, every one of them, the
-    <em>Sala Inside</em> folder. Standing under the roof, the camera sees painted ceiling and
-    columns and almost nothing it saw from the terrace, so the interior never bound to the
-    exterior walk and COLMAP filed it as a second, separate reconstruction. What you are looking
-    at is therefore the <strong>exterior</strong>, built from 395 photographs; the interior exists
-    as its own unlinked sub-model. The fix on the next capture is a handful of deliberate
-    transition frames — standing in the doorway, turning slowly from outside to inside — so the
-    two halves share features.
+    <strong>Where it actually pays is the empty space.</strong> Projecting every Gaussian back
+    into the 50 held-out cameras and asking how often it lands on sky rather than on the building:
+    the number that sit in sky in at least half of those views drops from <strong>632 to 34</strong>,
+    and at a looser threshold from 2,285 to 501. Weighted by size and opacity — how visible a
+    floater actually is — the share of the model occupying sky roughly halves, 0.95% to 0.49%.
+    The size filter also had less to remove afterwards, 4,756 oversized Gaussians against 6,435.
+  </p>
+
+  <dl class="facts">
+    <div class="fact"><dt>Sky Gaussians</dt><dd>34 <span style="color:var(--muted)">(was 632)</span></dd></div>
+    <div class="fact"><dt>Visible share in sky</dt><dd>0.49% <span style="color:var(--muted)">(was 0.95%)</span></dd></div>
+    <div class="fact"><dt>Oversized, removed</dt><dd>4,756 <span style="color:var(--muted)">(was 6,435)</span></dd></div>
+    <div class="fact"><dt>Sky mask</dt><dd>SegFormer-B2, ADE20K</dd></div>
+  </dl>
+
+  <p class="note">
+    <strong>How it is done matters more than that it is done.</strong> An earlier run painted the
+    sky black, and lost 2.2–2.4 dB: a colour rule decided differently from frame to frame, so the
+    model was told the same sky was black in one photograph and blue in the next. Here nothing is
+    painted. The mask is carried as an <em>alpha channel</em>, the render is multiplied by it
+    before the loss is taken, and the photograph itself is never altered — so a masked pixel
+    contributes no gradient at all. A pixel masked in one view and not in another is one fewer
+    observation rather than a contradiction, which is why an imperfect mask is survivable here and
+    was not before. The sky boundary is eroded a few pixels into the sky, so a wobbly edge costs a
+    thin rim of sky rather than the roofline. Sparse points seen in sky are dropped before training
+    starts, 1,409 of 240,357.
+  </p>
+
+  <p class="note">
+    <strong>What it does not fix.</strong> Some haze remains around the roof. Those are Gaussians
+    attached to the building's own silhouette, seen against the building in most views and against
+    sky in only a few, so the mask never suppresses them. Zero gradient in the sky also means zero
+    penalty, so a Gaussian that drifts into open air is not pushed back out — the crop and the size
+    filter still do that work afterwards. Two limits are untouched because they live in the
+    photographs, not the loss: no camera looks down on the roof, so nothing can invent what was
+    never photographed, and COLMAP still files the 51 <em>Sala Inside</em> frames as a separate
+    sub-model that this run does not include.
   </p>
 
   <p class="note">
@@ -175,7 +197,7 @@
   </p>
 </div></main>
 
-<script src="splat_sala.js"></script>
+<script src="splat_sala_v7.js"></script>
 <script>document.querySelectorAll(".n").forEach(e => e.textContent = window.SPLAT_COUNT.toLocaleString("en"));</script>
 <script src="vendor/splat.js"></script>
 <script src="nav.js"></script>

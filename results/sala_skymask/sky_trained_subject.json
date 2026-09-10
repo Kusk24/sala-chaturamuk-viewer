@@ -1,0 +1,361 @@
+{
+ "n_test": 50,
+ "psnr_subject": 22.338744509339346,
+ "psnr_subject_min": 14.70110978064774,
+ "psnr_subject_median": 22.339847113174727,
+ "psnr_full": 23.448260785805246,
+ "psnr_sky": 28.800846036540555,
+ "mean_sky_frac": 0.28301298359759,
+ "per_view": [
+  {
+   "name": "0000.jpg",
+   "psnr_full": 19.7893,
+   "psnr_subject": 17.5599,
+   "psnr_sky": 30.494,
+   "sky_frac": 0.423
+  },
+  {
+   "name": "0008.jpg",
+   "psnr_full": 24.6073,
+   "psnr_subject": 22.4855,
+   "psnr_sky": 33.4402,
+   "sky_frac": 0.4202
+  },
+  {
+   "name": "0016.jpg",
+   "psnr_full": 26.045,
+   "psnr_subject": 24.4102,
+   "psnr_sky": 30.9938,
+   "sky_frac": 0.402
+  },
+  {
+   "name": "0024.jpg",
+   "psnr_full": 25.7845,
+   "psnr_subject": 24.1738,
+   "psnr_sky": 31.6019,
+   "sky_frac": 0.3783
+  },
+  {
+   "name": "0032.jpg",
+   "psnr_full": 25.5394,
+   "psnr_subject": 23.9835,
+   "psnr_sky": 30.6618,
+   "sky_frac": 0.3835
+  },
+  {
+   "name": "0040.jpg",
+   "psnr_full": 25.2098,
+   "psnr_subject": 23.7021,
+   "psnr_sky": 30.7012,
+   "sky_frac": 0.3664
+  },
+  {
+   "name": "0048.jpg",
+   "psnr_full": 24.7033,
+   "psnr_subject": 22.8084,
+   "psnr_sky": 34.2709,
+   "sky_frac": 0.3808
+  },
+  {
+   "name": "0056.jpg",
+   "psnr_full": 25.7939,
+   "psnr_subject": 24.1634,
+   "psnr_sky": 33.5976,
+   "sky_frac": 0.3533
+  },
+  {
+   "name": "0064.jpg",
+   "psnr_full": 26.3448,
+   "psnr_subject": 24.9582,
+   "psnr_sky": 31.0968,
+   "sky_frac": 0.3612
+  },
+  {
+   "name": "0072.jpg",
+   "psnr_full": 25.7254,
+   "psnr_subject": 23.9959,
+   "psnr_sky": 31.2844,
+   "sky_frac": 0.4039
+  },
+  {
+   "name": "0080.jpg",
+   "psnr_full": 22.2238,
+   "psnr_subject": 20.8459,
+   "psnr_sky": 25.1027,
+   "sky_frac": 0.4352
+  },
+  {
+   "name": "0088.jpg",
+   "psnr_full": 25.9168,
+   "psnr_subject": 24.8902,
+   "psnr_sky": 30.486,
+   "sky_frac": 0.2907
+  },
+  {
+   "name": "0096.jpg",
+   "psnr_full": 27.207,
+   "psnr_subject": 26.2118,
+   "psnr_sky": 30.9003,
+   "sky_frac": 0.3102
+  },
+  {
+   "name": "0104.jpg",
+   "psnr_full": 26.6346,
+   "psnr_subject": 25.8383,
+   "psnr_sky": 28.9781,
+   "sky_frac": 0.3255
+  },
+  {
+   "name": "0112.jpg",
+   "psnr_full": 26.815,
+   "psnr_subject": 25.6034,
+   "psnr_sky": 31.7648,
+   "sky_frac": 0.3212
+  },
+  {
+   "name": "0120.jpg",
+   "psnr_full": 25.6419,
+   "psnr_subject": 24.36,
+   "psnr_sky": 31.927,
+   "sky_frac": 0.3098
+  },
+  {
+   "name": "0128.jpg",
+   "psnr_full": 25.9644,
+   "psnr_subject": 24.6216,
+   "psnr_sky": 35.1873,
+   "sky_frac": 0.2916
+  },
+  {
+   "name": "0136.jpg",
+   "psnr_full": 27.8041,
+   "psnr_subject": 26.5706,
+   "psnr_sky": 33.4418,
+   "sky_frac": 0.3112
+  },
+  {
+   "name": "0144.jpg",
+   "psnr_full": 27.4445,
+   "psnr_subject": 26.3421,
+   "psnr_sky": 32.0735,
+   "sky_frac": 0.3059
+  },
+  {
+   "name": "0152.jpg",
+   "psnr_full": 27.5077,
+   "psnr_subject": 26.5613,
+   "psnr_sky": 31.2289,
+   "sky_frac": 0.2973
+  },
+  {
+   "name": "0160.jpg",
+   "psnr_full": 26.5144,
+   "psnr_subject": 25.4451,
+   "psnr_sky": 31.1201,
+   "sky_frac": 0.2993
+  },
+  {
+   "name": "0168.jpg",
+   "psnr_full": 26.5398,
+   "psnr_subject": 25.2798,
+   "psnr_sky": 30.1158,
+   "sky_frac": 0.375
+  },
+  {
+   "name": "0176.jpg",
+   "psnr_full": 26.0152,
+   "psnr_subject": 24.7617,
+   "psnr_sky": 31.0693,
+   "sky_frac": 0.3273
+  },
+  {
+   "name": "0184.jpg",
+   "psnr_full": 26.0333,
+   "psnr_subject": 25.4565,
+   "psnr_sky": 27.7449,
+   "sky_frac": 0.3037
+  },
+  {
+   "name": "0192.jpg",
+   "psnr_full": 25.5905,
+   "psnr_subject": 24.2443,
+   "psnr_sky": 31.0972,
+   "sky_frac": 0.3358
+  },
+  {
+   "name": "0200.jpg",
+   "psnr_full": 18.4678,
+   "psnr_subject": 16.3562,
+   "psnr_sky": 29.7552,
+   "sky_frac": 0.4035
+  },
+  {
+   "name": "0208.jpg",
+   "psnr_full": 25.1462,
+   "psnr_subject": 23.6801,
+   "psnr_sky": 29.2939,
+   "sky_frac": 0.3949
+  },
+  {
+   "name": "0216.jpg",
+   "psnr_full": 23.6502,
+   "psnr_subject": 21.8028,
+   "psnr_sky": 30.7743,
+   "sky_frac": 0.3967
+  },
+  {
+   "name": "0224.jpg",
+   "psnr_full": 23.3175,
+   "psnr_subject": 21.6011,
+   "psnr_sky": 30.3402,
+   "sky_frac": 0.3769
+  },
+  {
+   "name": "0232.jpg",
+   "psnr_full": 23.6993,
+   "psnr_subject": 22.0045,
+   "psnr_sky": 29.1098,
+   "sky_frac": 0.4013
+  },
+  {
+   "name": "0240.jpg",
+   "psnr_full": 23.3253,
+   "psnr_subject": 21.572,
+   "psnr_sky": 30.3589,
+   "sky_frac": 0.3828
+  },
+  {
+   "name": "0248.jpg",
+   "psnr_full": 23.477,
+   "psnr_subject": 21.76,
+   "psnr_sky": 31.1231,
+   "sky_frac": 0.3693
+  },
+  {
+   "name": "0256.jpg",
+   "psnr_full": 23.6253,
+   "psnr_subject": 21.7192,
+   "psnr_sky": 32.7317,
+   "sky_frac": 0.3858
+  },
+  {
+   "name": "0264.jpg",
+   "psnr_full": 23.454,
+   "psnr_subject": 22.1334,
+   "psnr_sky": 30.2303,
+   "sky_frac": 0.3103
+  },
+  {
+   "name": "0272.jpg",
+   "psnr_full": 21.0836,
+   "psnr_subject": 20.8066,
+   "psnr_sky": 29.342,
+   "sky_frac": 0.0719
+  },
+  {
+   "name": "0280.jpg",
+   "psnr_full": 17.3741,
+   "psnr_subject": 17.3276,
+   "psnr_sky": 26.7564,
+   "sky_frac": 0.012
+  },
+  {
+   "name": "0288.jpg",
+   "psnr_full": 20.4323,
+   "psnr_subject": 20.5928,
+   "psnr_sky": 16.6928,
+   "sky_frac": 0.0259
+  },
+  {
+   "name": "0296.jpg",
+   "psnr_full": 22.335,
+   "psnr_subject": 22.1942,
+   "psnr_sky": 25.2544,
+   "sky_frac": 0.0631
+  },
+  {
+   "name": "0304.jpg",
+   "psnr_full": 20.0949,
+   "psnr_subject": 18.7074,
+   "psnr_sky": 24.4104,
+   "sky_frac": 0.3741
+  },
+  {
+   "name": "0363.jpg",
+   "psnr_full": 21.3148,
+   "psnr_subject": 20.6658,
+   "psnr_sky": 27.3668,
+   "sky_frac": 0.1765
+  },
+  {
+   "name": "0371.jpg",
+   "psnr_full": 21.3354,
+   "psnr_subject": 20.6359,
+   "psnr_sky": 25.9788,
+   "sky_frac": 0.2102
+  },
+  {
+   "name": "0379.jpg",
+   "psnr_full": 22.8266,
+   "psnr_subject": 22.5634,
+   "psnr_sky": 28.737,
+   "sky_frac": 0.0775
+  },
+  {
+   "name": "0387.jpg",
+   "psnr_full": 21.9894,
+   "psnr_subject": 21.4719,
+   "psnr_sky": 29.6396,
+   "sky_frac": 0.1325
+  },
+  {
+   "name": "0395.jpg",
+   "psnr_full": 22.0686,
+   "psnr_subject": 21.6802,
+   "psnr_sky": 27.8069,
+   "sky_frac": 0.1131
+  },
+  {
+   "name": "0403.jpg",
+   "psnr_full": 20.9059,
+   "psnr_subject": 20.493,
+   "psnr_sky": 25.0734,
+   "sky_frac": 0.1392
+  },
+  {
+   "name": "0411.jpg",
+   "psnr_full": 20.6188,
+   "psnr_subject": 19.669,
+   "psnr_sky": 27.8361,
+   "sky_frac": 0.2318
+  },
+  {
+   "name": "0419.jpg",
+   "psnr_full": 19.0528,
+   "psnr_subject": 19.0541,
+   "psnr_sky": 19.0376,
+   "sky_frac": 0.0792
+  },
+  {
+   "name": "0427.jpg",
+   "psnr_full": 16.6674,
+   "psnr_subject": 16.5547,
+   "psnr_sky": 18.0812,
+   "sky_frac": 0.0865
+  },
+  {
+   "name": "0435.jpg",
+   "psnr_full": 17.9801,
+   "psnr_subject": 17.9167,
+   "psnr_sky": 18.5757,
+   "sky_frac": 0.103
+  },
+  {
+   "name": "0443.jpg",
+   "psnr_full": 14.775,
+   "psnr_subject": 14.7011,
+   "psnr_sky": 15.3556,
+   "sky_frac": 0.1206
+  }
+ ]
+}

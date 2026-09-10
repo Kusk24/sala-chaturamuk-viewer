@@ -1,0 +1,20 @@
+{
+ "sala_sky_trained.splat": {
+  "gaussians": 593708,
+  "judged": 593708,
+  "sky_at_50": 632,
+  "sky_at_30": 2285,
+  "share_per_camera": 0.007018186286636479,
+  "share_per_camera_weighted": 0.009481919955985765,
+  "cameras": 50
+ },
+ "sala_sky_masked.splat": {
+  "gaussians": 597067,
+  "judged": 597067,
+  "sky_at_50": 34,
+  "sky_at_30": 501,
+  "share_per_camera": 0.006435737039971658,
+  "share_per_camera_weighted": 0.004851205821818436,
+  "cameras": 50
+ }
+}

@@ -1,0 +1,310 @@
+{
+  "n_test": 50,
+  "psnr_full": 14.45204,
+  "psnr_subject": 22.61194,
+  "psnr_subject_min": 14.733,
+  "psnr_subject_median": 22.64,
+  "mean_sky_frac": 0.283018,
+  "per_view": [
+    {
+      "name": "0000.jpg",
+      "psnr_full": 13.214,
+      "psnr_subject": 17.554,
+      "sky_frac": 0.423
+    },
+    {
+      "name": "0008.jpg",
+      "psnr_full": 14.076,
+      "psnr_subject": 22.895,
+      "sky_frac": 0.4202
+    },
+    {
+      "name": "0016.jpg",
+      "psnr_full": 13.8,
+      "psnr_subject": 24.846,
+      "sky_frac": 0.402
+    },
+    {
+      "name": "0024.jpg",
+      "psnr_full": 13.676,
+      "psnr_subject": 24.332,
+      "sky_frac": 0.3783
+    },
+    {
+      "name": "0032.jpg",
+      "psnr_full": 13.648,
+      "psnr_subject": 24.094,
+      "sky_frac": 0.3835
+    },
+    {
+      "name": "0040.jpg",
+      "psnr_full": 13.697,
+      "psnr_subject": 23.922,
+      "sky_frac": 0.3664
+    },
+    {
+      "name": "0048.jpg",
+      "psnr_full": 12.868,
+      "psnr_subject": 22.889,
+      "sky_frac": 0.3808
+    },
+    {
+      "name": "0056.jpg",
+      "psnr_full": 12.648,
+      "psnr_subject": 24.516,
+      "sky_frac": 0.3533
+    },
+    {
+      "name": "0064.jpg",
+      "psnr_full": 12.764,
+      "psnr_subject": 25.01,
+      "sky_frac": 0.3612
+    },
+    {
+      "name": "0072.jpg",
+      "psnr_full": 12.468,
+      "psnr_subject": 24.263,
+      "sky_frac": 0.4039
+    },
+    {
+      "name": "0080.jpg",
+      "psnr_full": 11.824,
+      "psnr_subject": 21.04,
+      "sky_frac": 0.4352
+    },
+    {
+      "name": "0088.jpg",
+      "psnr_full": 14.424,
+      "psnr_subject": 25.05,
+      "sky_frac": 0.2907
+    },
+    {
+      "name": "0096.jpg",
+      "psnr_full": 14.662,
+      "psnr_subject": 26.614,
+      "sky_frac": 0.3102
+    },
+    {
+      "name": "0104.jpg",
+      "psnr_full": 12.86,
+      "psnr_subject": 26.678,
+      "sky_frac": 0.3255
+    },
+    {
+      "name": "0112.jpg",
+      "psnr_full": 13.264,
+      "psnr_subject": 26.518,
+      "sky_frac": 0.3212
+    },
+    {
+      "name": "0120.jpg",
+      "psnr_full": 12.725,
+      "psnr_subject": 25.997,
+      "sky_frac": 0.3098
+    },
+    {
+      "name": "0128.jpg",
+      "psnr_full": 13.016,
+      "psnr_subject": 26.947,
+      "sky_frac": 0.2916
+    },
+    {
+      "name": "0136.jpg",
+      "psnr_full": 12.922,
+      "psnr_subject": 26.873,
+      "sky_frac": 0.3112
+    },
+    {
+      "name": "0144.jpg",
+      "psnr_full": 13.249,
+      "psnr_subject": 27.086,
+      "sky_frac": 0.3059
+    },
+    {
+      "name": "0152.jpg",
+      "psnr_full": 13.252,
+      "psnr_subject": 26.859,
+      "sky_frac": 0.2973
+    },
+    {
+      "name": "0160.jpg",
+      "psnr_full": 12.879,
+      "psnr_subject": 25.446,
+      "sky_frac": 0.2993
+    },
+    {
+      "name": "0168.jpg",
+      "psnr_full": 12.421,
+      "psnr_subject": 25.49,
+      "sky_frac": 0.375
+    },
+    {
+      "name": "0176.jpg",
+      "psnr_full": 13.143,
+      "psnr_subject": 25.273,
+      "sky_frac": 0.3273
+    },
+    {
+      "name": "0184.jpg",
+      "psnr_full": 14.14,
+      "psnr_subject": 25.618,
+      "sky_frac": 0.3037
+    },
+    {
+      "name": "0192.jpg",
+      "psnr_full": 12.58,
+      "psnr_subject": 24.679,
+      "sky_frac": 0.3358
+    },
+    {
+      "name": "0200.jpg",
+      "psnr_full": 9.579,
+      "psnr_subject": 17.063,
+      "sky_frac": 0.4035
+    },
+    {
+      "name": "0208.jpg",
+      "psnr_full": 10.64,
+      "psnr_subject": 23.635,
+      "sky_frac": 0.3949
+    },
+    {
+      "name": "0216.jpg",
+      "psnr_full": 10.917,
+      "psnr_subject": 22.028,
+      "sky_frac": 0.3967
+    },
+    {
+      "name": "0224.jpg",
+      "psnr_full": 11.543,
+      "psnr_subject": 21.486,
+      "sky_frac": 0.3769
+    },
+    {
+      "name": "0232.jpg",
+      "psnr_full": 11.646,
+      "psnr_subject": 22.079,
+      "sky_frac": 0.4013
+    },
+    {
+      "name": "0240.jpg",
+      "psnr_full": 12.196,
+      "psnr_subject": 21.644,
+      "sky_frac": 0.3828
+    },
+    {
+      "name": "0248.jpg",
+      "psnr_full": 12.505,
+      "psnr_subject": 22.124,
+      "sky_frac": 0.3693
+    },
+    {
+      "name": "0256.jpg",
+      "psnr_full": 12.329,
+      "psnr_subject": 22.199,
+      "sky_frac": 0.3858
+    },
+    {
+      "name": "0264.jpg",
+      "psnr_full": 14.56,
+      "psnr_subject": 22.404,
+      "sky_frac": 0.3103
+    },
+    {
+      "name": "0272.jpg",
+      "psnr_full": 20.723,
+      "psnr_subject": 20.692,
+      "sky_frac": 0.0719
+    },
+    {
+      "name": "0280.jpg",
+      "psnr_full": 17.461,
+      "psnr_subject": 17.414,
+      "sky_frac": 0.012
+    },
+    {
+      "name": "0288.jpg",
+      "psnr_full": 20.051,
+      "psnr_subject": 20.277,
+      "sky_frac": 0.0259
+    },
+    {
+      "name": "0296.jpg",
+      "psnr_full": 20.036,
+      "psnr_subject": 21.553,
+      "sky_frac": 0.0631
+    },
+    {
+      "name": "0304.jpg",
+      "psnr_full": 14.946,
+      "psnr_subject": 18.378,
+      "sky_frac": 0.3741
+    },
+    {
+      "name": "0363.jpg",
+      "psnr_full": 17.283,
+      "psnr_subject": 20.596,
+      "sky_frac": 0.1765
+    },
+    {
+      "name": "0371.jpg",
+      "psnr_full": 18.832,
+      "psnr_subject": 20.81,
+      "sky_frac": 0.2102
+    },
+    {
+      "name": "0379.jpg",
+      "psnr_full": 21.012,
+      "psnr_subject": 22.876,
+      "sky_frac": 0.0775
+    },
+    {
+      "name": "0387.jpg",
+      "psnr_full": 18.91,
+      "psnr_subject": 21.678,
+      "sky_frac": 0.1325
+    },
+    {
+      "name": "0395.jpg",
+      "psnr_full": 19.099,
+      "psnr_subject": 22.174,
+      "sky_frac": 0.1131
+    },
+    {
+      "name": "0403.jpg",
+      "psnr_full": 18.828,
+      "psnr_subject": 20.588,
+      "sky_frac": 0.1392
+    },
+    {
+      "name": "0411.jpg",
+      "psnr_full": 12.753,
+      "psnr_subject": 19.734,
+      "sky_frac": 0.2318
+    },
+    {
+      "name": "0419.jpg",
+      "psnr_full": 18.764,
+      "psnr_subject": 19.182,
+      "sky_frac": 0.0792
+    },
+    {
+      "name": "0427.jpg",
+      "psnr_full": 16.706,
+      "psnr_subject": 16.756,
+      "sky_frac": 0.0865
+    },
+    {
+      "name": "0435.jpg",
+      "psnr_full": 17.537,
+      "psnr_subject": 18.005,
+      "sky_frac": 0.103
+    },
+    {
+      "name": "0443.jpg",
+      "psnr_full": 13.526,
+      "psnr_subject": 14.733,
+      "sky_frac": 0.1206
+    }
+  ]
+}
