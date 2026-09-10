@@ -551,14 +551,38 @@ initial Gaussians contain none — the equivalent of running COLMAP with a sky m
 repeating 2.5 h of COLMAP. `sky='hsv'` / `sky=False` in cell 2 reproduce v5 / v6.
 """)
     co(r"""
-import numpy as np, cv2, time
+import numpy as np, cv2, time, json
 from PIL import Image
 SEG_MODEL, SEG_LONG, SKY_ID, ERODE = 'nvidia/segformer-b2-finetuned-ade-512-512', 1024, 2, 6
 MASKS = f'{PIN}/masks'          # 8-bit PNG per frame: 255 = subject (trained), 0 = sky (ignored)
 ALPHA = f'{PIN}/images_alpha'   # training copies of the images with that mask as alpha
+CACHE = f'{OUT}/masks'          # the masks again, in the version OUTPUT: {PIN} is scratch and is
+                                # wiped between versions, so without this a rerun repeats the GPU
+                                # pass. ~30 KB a frame; the RGBA copies are far too big to keep.
 files = sorted(glob.glob(f'{PIN}/images/*'))
 
 def stem(p): return os.path.splitext(os.path.basename(p))[0]
+
+def restore_masks():
+    # any earlier version of this notebook, attached as input, or this session's own output
+    dirs = [CACHE]
+    for root in INPUT_ROOTS: dirs += glob.glob(f'{root}/**/out_{SUBJECT}/masks', recursive=True)
+    n = 0
+    for d in dirs:
+        if not os.path.isdir(d) or os.path.abspath(d) == os.path.abspath(MASKS): continue
+        for p in files:
+            src, dst = f'{d}/{stem(p)}.png', f'{MASKS}/{stem(p)}.png'
+            if os.path.exists(src) and not os.path.exists(dst): shutil.copy(src, dst); n += 1
+    return n
+
+def build_alpha(paths):
+    # RGB from the photograph, alpha from the mask. PNG bytes under the ORIGINAL name: 3DGS looks
+    # the file up by the name in COLMAP's images.bin, and PIL reads the format from the header.
+    for p in paths:
+        im = cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB)
+        keep = cv2.imread(f'{MASKS}/{stem(p)}.png', 0)
+        assert keep is not None and keep.shape == im.shape[:2], p
+        Image.fromarray(np.dstack([im, keep])).save(f'{ALPHA}/{os.path.basename(p)}', format='PNG')
 
 def segment_sky(paths):
     import torch
@@ -578,11 +602,7 @@ def segment_sky(paths):
             lg = torch.nn.functional.interpolate(lg, size=(H, W), mode='bilinear', align_corners=False)
             sky = (lg.argmax(1)[0] == SKY_ID).to(torch.uint8).cpu().numpy()
         sky = cv2.erode(sky, k)                       # shrink the SKY: silhouettes keep a rim of sky, never lose edge pixels
-        keep = ((1 - sky) * 255).astype(np.uint8)
-        cv2.imwrite(f'{MASKS}/{stem(p)}.png', keep)
-        # PNG bytes under the ORIGINAL name: 3DGS looks the file up by the name in COLMAP's
-        # images.bin, and PIL reads the format from the header, not from the suffix
-        Image.fromarray(np.dstack([im, keep])).save(f'{ALPHA}/{os.path.basename(p)}', format='PNG')
+        cv2.imwrite(f'{MASKS}/{stem(p)}.png', ((1 - sky) * 255).astype(np.uint8))
         frac.append(sky.mean())
         if i % 50 == 0 or i == len(paths) - 1:
             print(f'  {i + 1:4d}/{len(paths)}  sky {sky.mean() * 100:5.1f}%   {time.time() - t0:5.0f} s')
@@ -624,14 +644,20 @@ def filter_sparse_points(sp0):
 
 MARK = f'{PIN}/.sky_removed'
 if SKY == 'seg':
-    os.makedirs(MASKS, exist_ok=True); os.makedirs(ALPHA, exist_ok=True)
-    todo = [p for p in files if not (os.path.exists(f'{ALPHA}/{os.path.basename(p)}') and os.path.exists(f'{MASKS}/{stem(p)}.png'))]
+    for d in (MASKS, ALPHA, CACHE): os.makedirs(d, exist_ok=True)
+    r = restore_masks()
+    if r: print(f'restored {r} sky masks from a previous version - no GPU pass needed for those')
+    todo = [p for p in files if not os.path.exists(f'{MASKS}/{stem(p)}.png')]
     if todo:
         print(f'segmenting the sky in {len(todo)} frames with {SEG_MODEL}')
         frac = segment_sky(todo)
         print(f'sky: mean {frac.mean() * 100:.1f}% of each frame (min {frac.min() * 100:.1f}%, max {frac.max() * 100:.1f}%)')
     else:
-        print('sky masks already built, skipping')
+        print('sky masks already built, skipping the segmentation pass')
+    for p in files:                                   # bank them where the next version can find them
+        if not os.path.exists(f'{CACHE}/{stem(p)}.png'): shutil.copy(f'{MASKS}/{stem(p)}.png', f'{CACHE}/{stem(p)}.png')
+    todo_a = [p for p in files if not os.path.exists(f'{ALPHA}/{os.path.basename(p)}')]
+    if todo_a: print(f'writing {len(todo_a)} RGBA training copies'); build_alpha(todo_a)
     a = Image.open(f'{ALPHA}/{os.path.basename(files[0])}'); assert a.mode == 'RGBA', a.mode
     kept, total = filter_sparse_points(f'{PIN}/sparse/0')
     print(f'sparse points: {kept:,} of {total:,} kept ({(total - kept) / max(total, 1) * 100:.1f}% were observed in the sky)')
