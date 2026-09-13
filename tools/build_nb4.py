@@ -4,6 +4,9 @@ import json, os
 
 OUTDIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'notebooks')
 
+SUBJ_MATCHER = {'sala':'sequential', 'lamp':'sequential', 'far':'sequential',
+                'salamodel':'exhaustive'}
+
 INFO = {
  'lamp': dict(t='~1 h 45 m', other='sala',
    tbl="""| Stage | Time |
@@ -45,10 +48,41 @@ INFO = {
         "`Sala 360` has three internal breaks (6.0, 1.0, 6.2 min). If the walk resumed in place, "
         "sequential matching bridges them; if not, that capture may show a couple of large steps "
         "on the fold check. Those are reported and the run continues - see cell 8 for why."),
+ 'salamodel': dict(t='~4.5-5.5 h', other='sala', cap='12 September', suffix='sep12',
+   tbl="""| Stage | Time |
+|---|---|
+| COLMAP extraction | ~20 min |
+| COLMAP matching (**exhaustive**, 45k pairs) | ~60-90 min |
+| COLMAP mapper | ~40 min |
+| Undistort | ~10 min |
+| Build CUDA extensions | ~6 min |
+| **Training, 30 000 iters** | **~2-2.5 h** |
+| Render + score | ~7 min |
+| **Total** | **~4.5-5.5 h** |""",
+   base='no prior run - this is the first model of the tabletop Sala model. Nothing to beat yet.',
+   note="301 photographs of the **miniature Sala model on a wooden board**, six orbit rings "
+        "(view1 61, view2 65, view3 44, view4 45, view5 45, view6 41) shot 08:14-08:42 on 12 Sep "
+        "2026, iPhone 17 Pro, 24 mm-equivalent on every frame, portrait 1200x1600.\n\n"
+        "The phone wrote EXIF orientation 6 (landscape pixels + a rotate flag); preparation baked "
+        "the rotation into the pixels and cleared the flag, so COLMAP, PIL and 3DGS all read the "
+        "same 1200x1600 and the model does not come out on its side.\n\n"
+        "**Matching is exhaustive, not sequential.** Measured on the prepared frames: the strong "
+        "cross-orbit links sit ~60 frames apart in filename order (frame 30 <-> 91 = 91 RANSAC "
+        "inliers), far outside any sequential window, while the orbit seams that sequential *would* "
+        "use carry only 12-25 inliers. Sequential would join six rings by their weakest seams and "
+        "risk a split model. The four-fold-symmetry danger that forced `loop_detection 0` on the "
+        "real pavilion does not appear here: a 90-degree-apart pair scores 9 inliers, because the "
+        "wood grain and cloth folds make every azimuth's background distinct.\n\n"
+        "**No sky mask** (`sky=False`): this is an indoor tabletop scene. SegFormer's sky class "
+        "would find no sky and risks labelling the bright white cloth as sky.\n\n"
+        "`keep_r`/`keep_h` start permissive at 0.80 so nothing is cut before you have seen the "
+        "model. Cell 14 prints the surface percentiles - tighten from those and re-run cell 14 "
+        "alone against `salamodel_full.ply`; no retraining needed."),
 }
 
 def cells(host, subj):
     I = INFO[subj]; C = []
+    CFG_MATCHER = SUBJ_MATCHER.get(subj, 'sequential')
     def md(t): C.append(('markdown', t.strip('\n')))
     def co(t): C.append(('code', t.strip('\n')))
     K = host == 'kaggle'
@@ -75,7 +109,7 @@ dies. Every stage banks to Drive and is restored on the next run, so you lose ti
 work, but the Kaggle version runs detached and is the better host if you have quota.""")
 
     md(f"""
-# {subj.upper()} — Gaussian Splatting from the 5 September capture ({'Kaggle' if K else 'Colab'})
+# {subj.upper()} — Gaussian Splatting from the {I.get('cap','5 September')} capture ({'Kaggle' if K else 'Colab'})
 
 **This file builds the `{subj}` model only.** Its twin, `{host.upper()}_{I['other']}_sep05.ipynb`,
 builds the other one. Nothing to edit — attach the dataset and run.
@@ -207,6 +241,7 @@ import os, glob, zipfile, shutil, time, csv, subprocess, collections
 
 # ============================ RUN SETTINGS ============================
 SUBJECT  = '{subj}'   # fixed: this file is {subj} only
+CAPTURE_DATE = '{I.get('cap','5 September')} 2026'
 RUN      = 'v7'       # training/output tag - bump it to retrain from scratch while COLMAP stays cached
 SUBMODEL = None       # None = largest COLMAP sub-model; '1' = the second one (sala: the interior)
 FORCE    = set()      # e.g. {{'matching','mapper'}} to recompute a COLMAP stage
@@ -232,9 +267,12 @@ CFG = {{
   #               protocol (right halves of held-out frames only), so off by default.
   # data_device : where 3DGS keeps the training images. 446 frames at 1600x1200 are
   #               ~10 GB on the GPU; the README recommends cpu for large sets.
-  'sala': dict(overlap=10, keep_r=1.10, keep_h=1.00, floater=0.04, sky='seg', exposure=False, data_device='cpu'),
-  'lamp': dict(overlap=14, keep_r=0.50, keep_h=0.60, floater=0.04, sky='seg', exposure=False, data_device='cuda'),
-  'far':  dict(overlap=10, keep_r=1.20, keep_h=1.00, floater=0.04, sky='seg', exposure=False, data_device='cpu'),
+  'sala': dict(matcher='sequential', overlap=10, keep_r=1.10, keep_h=1.00, floater=0.04, sky='seg', exposure=False, data_device='cpu'),
+  'lamp': dict(matcher='sequential', overlap=14, keep_r=0.50, keep_h=0.60, floater=0.04, sky='seg', exposure=False, data_device='cuda'),
+  'far':  dict(matcher='sequential', overlap=10, keep_r=1.20, keep_h=1.00, floater=0.04, sky='seg', exposure=False, data_device='cpu'),
+  # salamodel: tabletop miniature. exhaustive matching links the six orbits (see cell 6);
+  #            no sky indoors; crop starts permissive and is tuned from cell 14's percentiles.
+  'salamodel': dict(matcher='exhaustive', overlap=10, keep_r=0.80, keep_h=0.80, floater=0.04, sky=False, exposure=False, data_device='cpu'),
 }}
 assert SUBJECT in CFG, SUBJECT
 CF = CFG[SUBJECT]
@@ -385,22 +423,36 @@ else:
 """)
 
     md(r"""
-## 6 · Matching — cached, loop detection OFF
+## 6 · Matching — cached
+""" + ("""
+**Exhaustive** for this subject. Every pair is proposed and geometrically verified. The six orbit
+rings only connect through pairs that sit ~60 frames apart in filename order, which no sequential
+window reaches; the seams sequential *would* use carry a fraction of the inliers. Exhaustive is
+affordable here because the set is small (301 frames, ~45k pairs).
 
-The pavilion is four-faced, so views 90 degrees apart look alike. Vocabulary-tree loop detection
-retrieves on appearance and cannot tell them apart, which is what folded every earlier attempt.
-Sequential matching proposes only temporally adjacent pairs, which cannot be 90 degrees apart.
-""")
+Loop detection's four-faced failure does not apply: this scene's background (wood grain, cloth
+folds) differs at every azimuth, so 90-degree-apart pairs do not falsely match.
+""" if CFG_MATCHER == 'exhaustive' else """
+**Sequential, loop detection OFF.** The pavilion is four-faced, so views 90 degrees apart look
+alike. Vocabulary-tree loop detection retrieves on appearance and cannot tell them apart, which is
+what folded every earlier attempt. Sequential matching proposes only temporally adjacent pairs,
+which cannot be 90 degrees apart.
+"""))
     co(r"""
 if cached('db_matched.db'):
     print('matching already cached - skipping')
 else:
     t0 = time.time()
-    rc = sh(f'colmap sequential_matcher --database_path {DB}'
-            f' {M_GPU} 0 {M_MAX} 16384'
-            f' --SequentialMatching.overlap {CF["overlap"]}'
-            f' --SequentialMatching.loop_detection 0')
-    assert rc == 0, f'sequential_matcher failed (rc={rc})'
+    if CF.get('matcher', 'sequential') == 'exhaustive':
+        rc = sh(f'colmap exhaustive_matcher --database_path {DB}'
+                f' {M_GPU} 0 {M_MAX} 16384')
+        assert rc == 0, f'exhaustive_matcher failed (rc={rc})'
+    else:
+        rc = sh(f'colmap sequential_matcher --database_path {DB}'
+                f' {M_GPU} 0 {M_MAX} 16384'
+                f' --SequentialMatching.overlap {CF["overlap"]}'
+                f' --SequentialMatching.loop_detection 0')
+        assert rc == 0, f'sequential_matcher failed (rc={rc})'
     shutil.copy(DB, f'{OUT}/db_matched.db')
     print(f'matching done in {(time.time()-t0)/60:.1f} min, banked')
 """)
@@ -1064,7 +1116,7 @@ vm = [Rm[0], Rm[1], Rm[2], 0, Rm[3], Rm[4], Rm[5], 0, Rm[6], Rm[7], Rm[8], 0,
       -t[0]*Rm[2] - t[1]*Rm[5] - t[2]*Rm[8], 1]
 JS = f'{OUT}/splat_{TAG}.js'
 with open(JS, 'w') as f:
-    f.write(f'// Generated - 3D Gaussian Splatting model ({TAG}), Sala Chaturamuk Phaichit, 5 Sep 2026 capture, run {RUN}.\n'
+    f.write(f'// Generated - 3D Gaussian Splatting model ({TAG}), Sala Chaturamuk Phaichit, {CAPTURE_DATE} capture, run {RUN}.\n'
             f'// {len(raw):,} gaussians after crop / floater filter / upright, 32 bytes each. Base64 because a file:// page cannot fetch().\n'
             f'window.SPLAT_COUNT = {len(raw)};\n'
             f'window.SPLAT_VIEW_MATRIX = {json.dumps([round(float(x), 9) for x in vm])};\n'
@@ -1116,14 +1168,14 @@ def write(host, subj):
         cell = {"cell_type":kind, "metadata":{}, "source":[l+'\n' for l in lines[:-1]]+[lines[-1]]}
         if kind == 'code': cell["execution_count"] = None; cell["outputs"] = []
         nb["cells"].append(cell)
-    out = f'{OUTDIR}/{host.upper()}_{subj}_sep05.ipynb'
+    out = f'{OUTDIR}/{host.upper()}_{subj}_{INFO[subj].get("suffix","sep05")}.ipynb'
     json.dump(nb, open(out,'w'), indent=1); open(out,'a').write('\n')
     return out, len(nb['cells'])
 
 if __name__ == '__main__':
     import ast, re
     for host in ('kaggle','colab'):
-        for subj in ('lamp','sala'):
+        for subj in ('lamp','sala','salamodel'):
             out, n = write(host, subj)
             nb = json.load(open(out)); bad = 0
             for i,c in enumerate(nb['cells']):

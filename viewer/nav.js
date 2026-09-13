@@ -10,6 +10,7 @@
     { href: 'sala_v5.html',        group: 'Gaussian splatting',    name: 'Sala · sky blacked', note: 'whole frame 20.10 dB' },
     { href: 'lamp.html',           group: 'Gaussian splatting',    name: 'Lamp · sky trained', note: 'whole frame 20.87 dB' },
     { href: 'lamp_v5.html',        group: 'Gaussian splatting',    name: 'Lamp · sky blacked', note: 'whole frame 15.93 dB' },
+    { href: 'salamodel.html',      group: 'Gaussian splatting',    name: 'Sala model',         note: 'whole frame 25.08 dB' },
     { href: 'splat.html',          group: 'Gaussian splatting',    name: 'August',             note: '22.09 dB' },
     { href: 'reconstruction.html', group: 'Photogrammetry',        name: 'Mesh',               note: 'Object Capture' }
   ];

@@ -1,0 +1,643 @@
+<title>Sala Model Capture Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap">
+
+<style>
+  :root {
+    /* gilded wood, lacquer base, mirror-glass inlay - taken off the model itself */
+    --paper:      #FBF9F4;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F1E7;
+    --ink:        #211A11;
+    --muted:      #6C6154;
+    --rule:       #E2DACA;
+    --gold:       #8F6516;
+    --gold-wash:  #F4E9CD;
+    --lacquer:    #9C2B21;
+    --lacquer-wash:#F7E6E2;
+    --jade:       #2A6650;
+    --jade-wash:  #E4EFE9;
+    --shadow: 0 1px 2px rgba(33,26,17,.05), 0 12px 30px -18px rgba(33,26,17,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #14120D;
+      --surface:    #1C1913;
+      --surface-2:  #232018;
+      --ink:        #F3ECDE;
+      --muted:      #A79A87;
+      --rule:       #3A3325;
+      --gold:       #D9AE55;
+      --gold-wash:  #322910;
+      --lacquer:    #E28170;
+      --lacquer-wash:#331B16;
+      --jade:       #74C49C;
+      --jade-wash:  #16291F;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #14120D;
+    --surface:    #1C1913;
+    --surface-2:  #232018;
+    --ink:        #F3ECDE;
+    --muted:      #A79A87;
+    --rule:       #3A3325;
+    --gold:       #D9AE55;
+    --gold-wash:  #322910;
+    --lacquer:    #E28170;
+    --lacquer-wash:#331B16;
+    --jade:       #74C49C;
+    --jade-wash:  #16291F;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 15px/1.5 "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    padding-block: 26px 60px;
+    padding-left: 16px; padding-right: 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 26px;
+  }
+  .my { font-family: "Noto Sans Myanmar", "Padauk", "Myanmar Text", sans-serif; line-height: 1.85; }
+
+  .sheet {
+    width: 100%; max-width: 900px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    padding: 26px clamp(16px, 3.4vw, 34px) 28px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+
+  /* ---- masthead -------------------------------------------------- */
+  .head { display: flex; flex-direction: column; gap: 7px;
+          border-bottom: 2px solid var(--gold); padding-bottom: 13px; }
+  .eyebrow { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 10.5px;
+             letter-spacing: .17em; text-transform: uppercase; color: var(--gold); }
+  .my .eyebrow, .eyebrow.my { letter-spacing: .06em; }
+  h1 { font-family: "Archivo", sans-serif; font-weight: 700; font-size: 27px;
+       line-height: 1.14; margin: 0; text-wrap: balance; letter-spacing: -.015em; }
+  h1.my { font-size: 23px; line-height: 1.5; letter-spacing: 0; }
+  .stand { margin: 0; color: var(--muted); max-width: 68ch; font-size: 13.5px; }
+  .kit { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+  .kit span { font-size: 11.5px; padding: 3px 9px; border-radius: 2px;
+              background: var(--surface-2); border: 1px solid var(--rule);
+              font-variant-numeric: tabular-nums; }
+
+  /* ---- layout ---------------------------------------------------- */
+  .row { display: grid; gap: 22px; grid-template-columns: 1.08fr .92fr; align-items: start; }
+  .row.flip { grid-template-columns: .92fr 1.08fr; }
+  .stack { display: flex; flex-direction: column; gap: 17px; }
+  .pair { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; align-items: start; }
+  @media (max-width: 720px) {
+    .row, .row.flip, .trio, .pair { grid-template-columns: 1fr; }
+  }
+
+  /* ---- step blocks ----------------------------------------------- */
+  h2 { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 14.5px;
+       margin: 0 0 9px; display: flex; align-items: baseline; gap: 9px; letter-spacing: -.005em; }
+  h2.my { font-size: 14px; }
+  .num { font-family: "Archivo", sans-serif; font-weight: 700; font-size: 12px;
+         color: var(--gold); border-bottom: 2px solid var(--gold-wash); padding-bottom: 1px;
+         font-variant-numeric: tabular-nums; }
+  ol.steps, ul.steps { margin: 0; padding-left: 0; list-style: none;
+                       display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+  /* hanging indent, not grid: a grid item would be created for every inline
+     child, which breaks any sentence containing <b> into separate columns */
+  ol.steps li, ul.steps li { position: relative; padding-left: 24px; }
+  .my ol.steps li::before { content: counter(s, myanmar) "။"; }
+  ol.steps li::before { content: counter(s) "."; counter-increment: s;
+                        position: absolute; left: 0; top: 1px; width: 18px; text-align: left;
+                        font-family: "Archivo", sans-serif; font-weight: 600; font-size: 11.5px;
+                        color: var(--gold); font-variant-numeric: tabular-nums; }
+  ol.steps { counter-reset: s; }
+  ul.steps li { padding-left: 17px; }
+  ul.steps li::before { content: "·"; position: absolute; left: 2px; top: -2px;
+                        color: var(--gold); font-weight: 700; font-size: 18px; line-height: 1.2; }
+  .why { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  b, strong { font-weight: 700; }
+  .ui { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 12.5px;
+        background: var(--surface-2); border: 1px solid var(--rule);
+        padding: 0 4px; border-radius: 2px; white-space: nowrap; }
+
+  /* ---- circles table --------------------------------------------- */
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 330px; }
+  caption { text-align: left; color: var(--muted); font-size: 12px; padding-bottom: 6px; }
+  th { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 10.5px;
+       letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+       text-align: left; padding: 0 8px 5px 0; border-bottom: 1px solid var(--rule); }
+  th.my { letter-spacing: 0; text-transform: none; font-size: 11.5px; }
+  td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top;
+       font-variant-numeric: tabular-nums; }
+  tr.key td { background: var(--gold-wash); }
+  tr.key td:first-child { box-shadow: inset 3px 0 0 var(--gold); padding-left: 7px; }
+  td.n { font-family: "Archivo", sans-serif; font-weight: 600; }
+
+  /* ---- figures ---------------------------------------------------- */
+  figure { margin: 0; display: flex; flex-direction: column; gap: 7px; }
+  figure svg { width: 100%; height: auto; display: block;
+               background: var(--surface-2); border: 1px solid var(--rule); border-radius: 3px; }
+  figcaption { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  figcaption b { color: var(--ink); font-weight: 600; }
+
+  /* ---- call-out boxes --------------------------------------------- */
+  .box { border: 1px solid var(--rule); border-radius: 3px; padding: 13px 15px;
+         display: flex; flex-direction: column; gap: 8px; }
+  .box.no { background: var(--lacquer-wash); border-color: color-mix(in srgb, var(--lacquer) 30%, transparent); }
+  .box.go { background: var(--jade-wash); border-color: color-mix(in srgb, var(--jade) 30%, transparent); }
+  .box h3 { font-family: "Archivo", sans-serif; font-size: 12px; margin: 0;
+            letter-spacing: .11em; text-transform: uppercase; }
+  .box h3.my { letter-spacing: 0; text-transform: none; font-size: 13px; }
+  .box.no h3 { color: var(--lacquer); }
+  .box.go h3 { color: var(--jade); }
+  .box ul { margin: 0; padding-left: 0; list-style: none;
+            display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .box li { position: relative; padding-left: 19px; }
+  .box.no li::before { content: "✕"; position: absolute; left: 0; top: 1px;
+                       color: var(--lacquer); font-size: 11px; }
+  .box.go li::before { content: "✓"; position: absolute; left: 0; top: 0;
+                       color: var(--jade); font-size: 12px; }
+
+  .foot { border-top: 1px solid var(--rule); padding-top: 11px;
+          font-size: 11.5px; color: var(--muted); display: flex;
+          justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  /* ---- print ------------------------------------------------------ */
+  @page { size: A4; margin: 9mm; }
+  @media print {
+    :root {
+      --paper:#fff; --surface:#fff; --surface-2:#F6F2E9; --ink:#1A150E; --muted:#5C5347;
+      --rule:#D8CFBD; --gold:#8A6114; --gold-wash:#F4E9CD; --lacquer:#94271E;
+      --lacquer-wash:#F9EBE8; --jade:#265E49; --jade-wash:#E8F1EC; --shadow:none;
+    }
+    body { padding: 0; gap: 0; background: #fff; font-size: 8.5pt; }
+    .sheet { max-width: none; border: 0; box-shadow: none; padding: 0; border-radius: 0;
+             break-after: page; page-break-after: always; gap: 7px; }
+    .sheet:last-of-type { break-after: auto; page-break-after: auto; }
+    .my { line-height: 1.42; }
+    .head { gap: 3px; padding-bottom: 7px; }
+    h1 { font-size: 18pt; } h1.my { font-size: 13pt; }
+    .stand { font-size: 8pt; max-width: none; }
+    .kit { margin-top: 1px; gap: 4px; } .kit span { font-size: 7pt; padding: 1px 6px; }
+    .eyebrow { font-size: 7pt; }
+    .row { gap: 13px; grid-template-columns: 1.22fr .78fr; }
+    .row.flip { grid-template-columns: .78fr 1.22fr; }
+    .stack { gap: 9px; }
+    h2 { font-size: 10pt; margin-bottom: 5px; gap: 7px; } h2.my { font-size: 9.5pt; }
+    .num { font-size: 8.5pt; }
+    ol.steps, ul.steps { gap: 3px; font-size: 8pt; }
+    .my ol.steps, .my ul.steps { gap: 2px; }
+    ol.steps li, ul.steps li { padding-left: 15px; }
+    .why { font-size: 7pt; margin-top: 0; }
+    .ui { font-size: 7.5pt; }
+    table { font-size: 8pt; min-width: 0; } caption { font-size: 7pt; padding-bottom: 3px; }
+    th { font-size: 7pt; padding-bottom: 3px; } td { padding: 2px 6px 2px 0; }
+    figure { gap: 3px; } figcaption { font-size: 7pt; line-height: 1.3; }
+    .box { padding: 8px 11px; gap: 4px; } .box ul { gap: 3px; font-size: 8pt; }
+    .box h3 { font-size: 8.5pt; } .box li { padding-left: 16px; }
+    .foot { font-size: 7pt; padding-top: 6px; }
+  }
+</style>
+
+<!-- one drawing of the pavilion, reused across every figure -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="sala" viewBox="0 0 60 64">
+      <path d="M11 27 C4 23 3 14 7 8 C7 15 10 21 15 24 Z" fill="currentColor" opacity=".9"/>
+      <path d="M49 27 C56 23 57 14 53 8 C53 15 50 21 45 24 Z" fill="currentColor" opacity=".9"/>
+      <path d="M30 4 L47 22 L13 22 Z" fill="currentColor" opacity=".9"/>
+      <path d="M30 16 L54 34 L6 34 Z" fill="currentColor" opacity=".72"/>
+      <rect x="17" y="34" width="26" height="13" fill="currentColor" opacity=".38"/>
+      <rect x="21" y="36" width="3.5" height="11" fill="currentColor" opacity=".8"/>
+      <rect x="35.5" y="36" width="3.5" height="11" fill="currentColor" opacity=".8"/>
+      <rect x="11" y="47" width="38" height="5" fill="currentColor" opacity=".62"/>
+      <rect x="6" y="52" width="48" height="6" fill="currentColor" opacity=".52"/>
+      <rect x="24" y="58" width="12" height="4" fill="currentColor" opacity=".4"/>
+    </symbol>
+
+    <marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 1 L9 5 L0 9 Z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>
+
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="sala" viewBox="0 0 60 64">
+      <path d="M11 27 C4 23 3 14 7 8 C7 15 10 21 15 24 Z" fill="currentColor" opacity=".9"/>
+      <path d="M49 27 C56 23 57 14 53 8 C53 15 50 21 45 24 Z" fill="currentColor" opacity=".9"/>
+      <path d="M30 4 L47 22 L13 22 Z" fill="currentColor" opacity=".9"/>
+      <path d="M30 16 L54 34 L6 34 Z" fill="currentColor" opacity=".72"/>
+      <rect x="17" y="34" width="26" height="13" fill="currentColor" opacity=".38"/>
+      <rect x="21" y="36" width="3.5" height="11" fill="currentColor" opacity=".8"/>
+      <rect x="35.5" y="36" width="3.5" height="11" fill="currentColor" opacity=".8"/>
+      <rect x="11" y="47" width="38" height="5" fill="currentColor" opacity=".62"/>
+      <rect x="6" y="52" width="48" height="6" fill="currentColor" opacity=".52"/>
+      <rect x="24" y="58" width="12" height="4" fill="currentColor" opacity=".4"/>
+    </symbol>
+    <marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 1 L9 5 L0 9 Z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>
+
+<section class="sheet">
+  <div class="head">
+    <div class="eyebrow">CSX4213 &#183; Sala Chaturamuk Phaichit &#183; Capture sheet</div>
+    <h1>Photographing the model</h1>
+    <p class="stand">One sitting, about 15 minutes. The only hard rule: every photograph from the <b>same phone, same lens, same session</b>.</p>
+    <div class="kit"><span>iPhone 17 Pro</span><span>1&#215; only</span><span>~120 photos</span><span>~15 min</span></div>
+  </div>
+
+  <div class="row">
+    <div class="stack">
+      <div>
+        <h2><span class="num">1</span> Room</h2>
+        <ul class="steps">
+        <li>Pull the table <b>away from the cabinet</b>. You must be able to walk right behind it.</li>
+        <li>Put a <b>patterned mat</b> under the model. <span class="why">Plain white gives the computer nothing to lock on to.</span></li>
+        <li>Both softboxes on, equal brightness. Do not move them once you start.</li>
+        <li>Model and table stay still the whole time. Walk around it &#8212; never turn it.</li>
+        <li>Nobody moving in the background.</li>
+        </ul>
+      </div>
+      <div>
+        <h2><span class="num">2</span> Phone</h2>
+        <ul class="steps">
+        <li>Stay on <span class="ui">1&#215;</span>. Never 0.5&#215;, 2&#215; or 4&#215;. Never pinch to zoom.</li>
+        <li>If a <b>flower icon</b> appears, tap it to switch macro off. <span class="why">Macro changes lens without telling you.</span></li>
+        <li>Live Photo <b>off</b>. Flash <b>off</b>.</li>
+        <li>Photo mode. No Portrait, no Night, no filters.</li>
+        <li>Stay 25 cm back. Tap the model once to focus before each circle.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <figure>
+      <svg viewBox="0 0 320 300" role="img" aria-label="Plan view: 36 evenly spaced camera positions in a circle around the model">
+        <g stroke="currentColor" stroke-width="1.4" opacity=".38">
+          <line x1="160" y1="24" x2="160" y2="32"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(30 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(60 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(90 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(120 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(150 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(180 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(210 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(240 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(270 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(300 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(330 160 150)"/></g>
+        <g font-family="Archivo, sans-serif" font-size="10" fill="currentColor" opacity=".5"
+           text-anchor="middle" dominant-baseline="middle">
+          <text x="160" y="16">12</text><text x="302" y="150">3</text>
+          <text x="160" y="284">6</text><text x="18" y="150">9</text>
+        </g>
+        <circle cx="160" cy="150" r="106" fill="none" stroke="currentColor"
+                stroke-width=".8" opacity=".18" stroke-dasharray="3 4"/>
+        <circle cx="160" cy="150" r="106" fill="none" stroke="#8F6516"
+                stroke-width="5.5" stroke-linecap="round" stroke-dasharray="0.5 18.0"/>
+        <path d="M146 122 h28 v14 h14 v28 h-14 v14 h-28 v-14 h-14 v-28 h14 Z"
+              fill="currentColor" opacity=".18" stroke="currentColor" stroke-width="1.1"/>
+        <circle cx="160" cy="150" r="3" fill="#8F6516"/>
+        <g stroke="currentColor" opacity=".3" stroke-width=".9">
+          <line x1="212" y1="150" x2="254" y2="150"/>
+          <line x1="211.2" y1="159.0" x2="253.7" y2="166.5"/>
+        </g>
+        <text x="228" y="163" font-family="Archivo, sans-serif" font-size="9.5"
+              fill="currentColor" opacity=".6" text-anchor="end">10&#176;</text>
+        <g transform="translate(272 262)" stroke="#8F6516" fill="none" stroke-width="2">
+          <path d="M0 -14 A 14 14 0 1 1 -12 7" marker-end="url(#ar)" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <figcaption><b>36 photographs per circle.</b> A clock face on the table: one on every hour, two more between each pair.</figcaption>
+    </figure>
+      <figure>
+      <svg viewBox="0 0 320 78" role="img" aria-label="The zoom control with 1x circled and the others crossed out">
+        <rect x="46" y="15" width="228" height="48" rx="24" fill="currentColor" opacity=".07"/>
+        <rect x="46" y="15" width="228" height="48" rx="24" fill="none" stroke="currentColor"
+              stroke-width="1" opacity=".25"/>
+        <g font-family="Archivo, sans-serif" font-size="15" text-anchor="middle" dominant-baseline="central">
+          <text x="88" y="39" fill="currentColor" opacity=".45">.5</text>
+          <line x1="76" y1="51" x2="100" y2="27" stroke="#9C2B21" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="160" cy="39" r="21" fill="#8F6516"/>
+          <text x="160" y="39" fill="#FFF8E7" font-weight="700">1&#215;</text>
+          <text x="218" y="39" fill="currentColor" opacity=".45">2</text>
+          <line x1="206" y1="51" x2="230" y2="27" stroke="#9C2B21" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="256" y="39" fill="currentColor" opacity=".45">4</text>
+          <line x1="246" y1="51" x2="266" y2="27" stroke="#9C2B21" stroke-width="2.2" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <figcaption><b>One lens, start to finish.</b> Five earlier attempts failed on mixed lenses.</figcaption>
+    </figure>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="stack">
+      <div>
+        <h2><span class="num">3</span> Four circles</h2>
+        <div class="tablewrap">
+          <table>
+            <caption>Both hands, phone upright, 35&#8211;45 cm away.</caption>
+            <thead><tr><th>Circle</th><th>Looking down</th><th>Photos</th></tr></thead>
+            <tbody>
+            <tr><td><b>1 &#8212; Low</b><br><span class="why">crouched, level with the base</span></td><td>15&#176;</td><td class="n">36</td></tr>
+            <tr><td><b>2 &#8212; Middle</b><br><span class="why">standing, normal height</span></td><td>40&#176;</td><td class="n">36</td></tr>
+            <tr class="key"><td><b>3 &#8212; High</b><br><span class="why">phone raised above the roof</span></td><td>65&#176;</td><td class="n">36</td></tr>
+            <tr class="key"><td><b>4 &#8212; Top</b><br><span class="why">arm up, almost straight down</span></td><td>85&#176;</td><td class="n">12</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h2><span class="num">4</span> Every shot</h2>
+        <ul class="steps">
+        <li>Whole model in frame, a finger&#8217;s width of space all round.</li>
+        <li>One short side-step between shots, about 10&#176;.</li>
+        <li>Go behind it. The back matters as much as the front.</li>
+        <li>Before you stop: check nothing is blurred, and that you can see the <b>top of the roof</b>.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <figure>
+      <svg viewBox="0 0 380 205" role="img" aria-label="Side view: four camera heights at 15, 40, 65 and 85 degrees">
+        <line x1="24" y1="180" x2="356" y2="180" stroke="currentColor" stroke-width="1.4" opacity=".5"/>
+        <path d="M302 148 A 132 132 0 0 0 170 16" fill="none" stroke="currentColor"
+              stroke-width="1" opacity=".25" stroke-dasharray="4 5"/>
+        <g stroke="currentColor" opacity=".26" stroke-width=".9" stroke-dasharray="3 4">
+          <line x1="297.5" y1="113.8" x2="170" y2="148"/>
+          <line x1="271.1" y1="63.1" x2="170" y2="148"/>
+        </g>
+        <g stroke="#8F6516" opacity=".65" stroke-width=".9" stroke-dasharray="3 4">
+          <line x1="225.8" y1="28.4" x2="170" y2="148"/>
+          <line x1="181.5" y1="16.5" x2="170" y2="148"/>
+        </g>
+        <ellipse cx="170" cy="130" rx="38" ry="17" fill="none" stroke="#8F6516"
+                 stroke-width="1.3" stroke-dasharray="4 4" opacity=".85"/>
+        <g transform="translate(140 116)" color="currentColor" opacity=".85">
+          <use href="#sala" width="60" height="64"/>
+        </g>
+        <g fill="currentColor" opacity=".72">
+          <g transform="translate(297.5 113.8) rotate(165)"><rect x="-3.5" y="-11" width="7" height="22" rx="2"/></g>
+          <g transform="translate(271.1 63.1) rotate(140)"><rect x="-3.5" y="-11" width="7" height="22" rx="2"/></g>
+        </g>
+        <g fill="#8F6516">
+          <g transform="translate(225.8 28.4) rotate(115)"><rect x="-3.5" y="-11" width="7" height="22" rx="2"/></g>
+          <g transform="translate(181.5 16.5) rotate(95)"><rect x="-3.5" y="-11" width="7" height="22" rx="2"/></g>
+        </g>
+        <g font-family="Archivo, sans-serif" font-size="11.5" font-weight="600">
+          <text x="316" y="117" fill="currentColor" opacity=".7">15&#176;</text>
+          <text x="288" y="62" fill="currentColor" opacity=".7">40&#176;</text>
+          <text x="243" y="24" fill="#8F6516">65&#176;</text>
+          <text x="196" y="13" fill="#8F6516">85&#176;</text>
+        </g>
+      </svg>
+      <figcaption><b>The two gold circles are the ones people skip.</b> Our earlier capture had nothing from above, and the roof came out a blur.</figcaption>
+    </figure>
+      <figure>
+      <svg viewBox="0 0 330 146" role="img" aria-label="Three phone frames: too small, correctly framed, cropped">
+        <g fill="none" stroke="currentColor" stroke-width="1.3" opacity=".42">
+          <rect x="14" y="8" width="80" height="126" rx="9"/>
+          <rect x="125" y="8" width="80" height="126" rx="9"/>
+          <rect x="236" y="8" width="80" height="126" rx="9"/>
+        </g>
+        <g transform="translate(44 54)" color="currentColor" opacity=".72"><use href="#sala" width="20" height="21"/></g>
+        <g transform="translate(133 40)" color="currentColor" opacity=".85"><use href="#sala" width="64" height="68"/></g>
+        <clipPath id="clipA"><rect x="237" y="9" width="78" height="124" rx="8"/></clipPath>
+        <g clip-path="url(#clipA)"><g transform="translate(224 18)" color="currentColor" opacity=".85"><use href="#sala" width="104" height="111"/></g></g>
+        <g font-size="15" font-weight="700" text-anchor="middle" font-family="Archivo, sans-serif">
+          <text x="54" y="130" fill="#9C2B21">&#10005;</text>
+          <text x="165" y="130" fill="#2A6650">&#10003;</text>
+          <text x="276" y="130" fill="#9C2B21">&#10005;</text>
+        </g>
+        <g transform="translate(299 24)">
+          <circle cx="0" cy="0" r="9" fill="#9C2B21" opacity=".12"/>
+          <g fill="#9C2B21"><circle cx="0" cy="-4.6" r="3"/><circle cx="4.4" cy="-1.4" r="3"/>
+            <circle cx="2.7" cy="3.7" r="3"/><circle cx="-2.7" cy="3.7" r="3"/>
+            <circle cx="-4.4" cy="-1.4" r="3"/></g>
+        </g>
+      </svg>
+      <figcaption><b>Too far, right, too close.</b> The flower icon means the phone has changed lens.</figcaption>
+    </figure>
+    </div>
+  </div>
+
+  <div class="box no">
+    <h3>Never</h3>
+    <ul>
+        <li>Zoom, crop, edit or filter.</li>
+        <li>Portrait mode, Night mode, flash.</li>
+        <li>Turn the model instead of walking round it.</li>
+        <li>Let your shadow fall on it.</li>
+        <li>Send by Messenger, LINE or WhatsApp. <b>AirDrop</b>, or Drive at original quality.</li>
+    </ul>
+  </div>
+
+  <div class="foot"><span>One phone &#183; one lens &#183; one sitting</span><span>Sala Chaturamuk Phaichit &#183; tabletop model</span></div>
+</section>
+
+<section class="sheet my">
+  <div class="head">
+    <div class="eyebrow my">CSX4213 &#183; စာလာ ချတုရမုခ် ဖိုက်ချစ် &#183; ဓာတ်ပုံရိုက်လမ်းညွှန်</div>
+    <h1 my>မော်ဒယ်ကို ဓာတ်ပုံရိုက်နည်း</h1>
+    <p class="stand">တစ်ကြိမ်တည်း၊ ၁၅ မိနစ်ခန့်။ စည်းကမ်းတစ်ခုတည်း — ဓာတ်ပုံအားလုံး <b>ဖုန်းတစ်လုံးတည်း၊ မှန်ဘီလူးတစ်ခုတည်း၊ တစ်ကြိမ်တည်း</b>မှ ရရမည်။</p>
+    <div class="kit"><span>iPhone 17 Pro</span><span>1&#215; သာ</span><span>ပုံ ၁၂၀ ခန့်</span><span>၁၅ မိနစ်ခန့်</span></div>
+  </div>
+
+  <div class="row">
+    <div class="stack">
+      <div>
+        <h2 my><span class="num">၁</span> အခန်း</h2>
+        <ul class="steps">
+        <li>စားပွဲကို <b>ဗီရိုနှင့် ခွာ</b>ထားပါ။ နောက်ဘက်သို့ ဝင်လျှောက်နိုင်ရမည်။</li>
+        <li>မော်ဒယ်အောက်တွင် <b>ပုံစံပါသော ဖျာ</b> ခင်းပါ။ <span class="why">အဖြူရောင်သက်သက်က ကွန်ပျူတာအတွက် မှတ်စရာ မရှိပါ။</span></li>
+        <li>Softbox နှစ်လုံးစလုံး ဖွင့်၊ အလင်းတူညီစေပါ။ စတင်ပြီးလျှင် မရွှေ့ပါနှင့်။</li>
+        <li>မော်ဒယ်နှင့် စားပွဲ မရွှေ့ရ။ ကိုယ်တိုင် ပတ်လျှောက်ပါ — မော်ဒယ်ကို မလှည့်ရ။</li>
+        <li>နောက်ခံတွင် လူ မသွားမလာစေရ။</li>
+        </ul>
+      </div>
+      <div>
+        <h2 my><span class="num">၂</span> ဖုန်း</h2>
+        <ul class="steps">
+        <li><span class="ui">1&#215;</span> တွင်သာ ထားပါ။ 0.5&#215;၊ 2&#215;၊ 4&#215; မနှိပ်ရ။ ဆွဲချဲ့ခြင်း မလုပ်ရ။</li>
+        <li><b>ပန်းပွင့်ပုံ</b> ပေါ်လျှင် နှိပ်၍ Macro ပိတ်ပါ။ <span class="why">Macro က အသိမပေးဘဲ မှန်ဘီလူး ပြောင်းသည်။</span></li>
+        <li>Live Photo <b>ပိတ်</b>။ ဖလက်ရှ် <b>ပိတ်</b>။</li>
+        <li>Photo မုဒ်သာ။ Portrait၊ Night၊ ဖီလ်တာ မသုံးရ။</li>
+        <li>၂၅ စင်တီမီတာ ခွာပါ။ စက်ဝိုင်းမစမီ မော်ဒယ်ပေါ် တစ်ချက်နှိပ်၍ ဖိုကပ်ချပါ။</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <figure>
+      <svg viewBox="0 0 320 300" role="img" aria-label="အထက်မှမြင်ကွင်း — ကင်မရာနေရာ ၃၆ ခု">
+        <g stroke="currentColor" stroke-width="1.4" opacity=".38">
+          <line x1="160" y1="24" x2="160" y2="32"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(30 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(60 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(90 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(120 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(150 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(180 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(210 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(240 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(270 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(300 160 150)"/>
+          <line x1="160" y1="24" x2="160" y2="32" transform="rotate(330 160 150)"/></g>
+        <g font-family="Archivo, sans-serif" font-size="10" fill="currentColor" opacity=".5"
+           text-anchor="middle" dominant-baseline="middle">
+          <text x="160" y="16">12</text><text x="302" y="150">3</text>
+          <text x="160" y="284">6</text><text x="18" y="150">9</text>
+        </g>
+        <circle cx="160" cy="150" r="106" fill="none" stroke="currentColor"
+                stroke-width=".8" opacity=".18" stroke-dasharray="3 4"/>
+        <circle cx="160" cy="150" r="106" fill="none" stroke="#8F6516"
+                stroke-width="5.5" stroke-linecap="round" stroke-dasharray="0.5 18.0"/>
+        <path d="M146 122 h28 v14 h14 v28 h-14 v14 h-28 v-14 h-14 v-28 h14 Z"
+              fill="currentColor" opacity=".18" stroke="currentColor" stroke-width="1.1"/>
+        <circle cx="160" cy="150" r="3" fill="#8F6516"/>
+        <g stroke="currentColor" opacity=".3" stroke-width=".9">
+          <line x1="212" y1="150" x2="254" y2="150"/>
+          <line x1="211.2" y1="159.0" x2="253.7" y2="166.5"/>
+        </g>
+        <text x="228" y="163" font-family="Archivo, sans-serif" font-size="9.5"
+              fill="currentColor" opacity=".6" text-anchor="end">10&#176;</text>
+        <g transform="translate(272 262)" stroke="#8F6516" fill="none" stroke-width="2">
+          <path d="M0 -14 A 14 14 0 1 1 -12 7" marker-end="url(#ar)" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <figcaption><b>စက်ဝိုင်းတစ်ခုလျှင် ၃၆ ပုံ။</b> နာရီမျက်နှာပြင် မြင်ယောင်ပါ — ဂဏန်းတိုင်းတွင် တစ်ပုံ၊ ကြားတွင် နှစ်ပုံစီ။</figcaption>
+    </figure>
+      <figure>
+      <svg viewBox="0 0 320 78" role="img" aria-label="ဇူးမ်ခလုတ် — 1&#215; ကိုသာ သုံးရန်">
+        <rect x="46" y="15" width="228" height="48" rx="24" fill="currentColor" opacity=".07"/>
+        <rect x="46" y="15" width="228" height="48" rx="24" fill="none" stroke="currentColor"
+              stroke-width="1" opacity=".25"/>
+        <g font-family="Archivo, sans-serif" font-size="15" text-anchor="middle" dominant-baseline="central">
+          <text x="88" y="39" fill="currentColor" opacity=".45">.5</text>
+          <line x1="76" y1="51" x2="100" y2="27" stroke="#9C2B21" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="160" cy="39" r="21" fill="#8F6516"/>
+          <text x="160" y="39" fill="#FFF8E7" font-weight="700">1&#215;</text>
+          <text x="218" y="39" fill="currentColor" opacity=".45">2</text>
+          <line x1="206" y1="51" x2="230" y2="27" stroke="#9C2B21" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="256" y="39" fill="currentColor" opacity=".45">4</text>
+          <line x1="246" y1="51" x2="266" y2="27" stroke="#9C2B21" stroke-width="2.2" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <figcaption><b>အစအဆုံး မှန်ဘီလူးတစ်ခုတည်း။</b> ယခင် ငါးကြိမ် ပျက်ရသည်မှာ မှန်ဘီလူး ရောသုံးမိ၍။</figcaption>
+    </figure>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="stack">
+      <div>
+        <h2 my><span class="num">၃</span> စက်ဝိုင်း လေးခု</h2>
+        <div class="tablewrap">
+          <table>
+            <caption>လက်နှစ်ဖက်၊ ဖုန်းမတ်မတ်၊ ၃၅–၄၅ စင်တီမီတာ ခွာပါ။</caption>
+            <thead><tr><th my>စက်ဝိုင်း</th><th my>အောက်ငုံ့ရန်</th><th my>ပုံအရေအတွက်</th></tr></thead>
+            <tbody>
+            <tr><td><b>၁ — နိမ့်</b><br><span class="why">ကုန်း၍ အောက်ခံနှင့် ညီအောင်</span></td><td>15&#176;</td><td class="n">၃၆</td></tr>
+            <tr><td><b>၂ — အလယ်</b><br><span class="why">မတ်တပ်ရပ်</span></td><td>40&#176;</td><td class="n">၃၆</td></tr>
+            <tr class="key"><td><b>၃ — မြင့်</b><br><span class="why">ဖုန်းကို အမိုးထက် မြှောက်</span></td><td>65&#176;</td><td class="n">၃၆</td></tr>
+            <tr class="key"><td><b>၄ — ထိပ်</b><br><span class="why">လက်မြှောက်၍ တည့်တည့်နီးပါး</span></td><td>85&#176;</td><td class="n">၁၂</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h2 my><span class="num">၄</span> ပုံတိုင်းအတွက်</h2>
+        <ul class="steps">
+        <li>မော်ဒယ်တစ်ခုလုံး ဘောင်ထဲဝင်ရမည်၊ ပတ်လည်တွင် လက်ညှိုးတစ်ချောင်းစာ နေရာလွတ်။</li>
+        <li>ပုံတစ်ပုံနှင့်တစ်ပုံကြား တစ်လှမ်းစီ၊ ၁၀&#176; ခန့်။</li>
+        <li>နောက်ဘက်ကိုပါ ပတ်ရိုက်ပါ။ နောက်ဘက်သည် ရှေ့ဘက်လောက်ပင် အရေးကြီးသည်။</li>
+        <li>မရပ်မီ — ဝါးနေသောပုံ ရှိမရှိနှင့် <b>အမိုးထိပ်</b> မြင်ရမရ စစ်ပါ။</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <figure>
+      <svg viewBox="0 0 380 205" role="img" aria-label="ဘေးတိုက်မြင်ကွင်း — အမြင့် လေးဆင့်">
+        <line x1="24" y1="180" x2="356" y2="180" stroke="currentColor" stroke-width="1.4" opacity=".5"/>
+        <path d="M302 148 A 132 132 0 0 0 170 16" fill="none" stroke="currentColor"
+              stroke-width="1" opacity=".25" stroke-dasharray="4 5"/>
+        <g stroke="currentColor" opacity=".26" stroke-width=".9" stroke-dasharray="3 4">
+          <line x1="297.5" y1="113.8" x2="170" y2="148"/>
+          <line x1="271.1" y1="63.1" x2="170" y2="148"/>
+        </g>
+        <g stroke="#8F6516" opacity=".65" stroke-width=".9" stroke-dasharray="3 4">
+          <line x1="225.8" y1="28.4" x2="170" y2="148"/>
+          <line x1="181.5" y1="16.5" x2="170" y2="148"/>
+        </g>
+        <ellipse cx="170" cy="130" rx="38" ry="17" fill="none" stroke="#8F6516"
+                 stroke-width="1.3" stroke-dasharray="4 4" opacity=".85"/>
+        <g transform="translate(140 116)" color="currentColor" opacity=".85">
+          <use href="#sala" width="60" height="64"/>
+        </g>
+        <g fill="currentColor" opacity=".72">
+          <g transform="translate(297.5 113.8) rotate(165)"><rect x="-3.5" y="-11" width="7" height="22" rx="2"/></g>
+          <g transform="translate(271.1 63.1) rotate(140)"><rect x="-3.5" y="-11" width="7" height="22" rx="2"/></g>
+        </g>
+        <g fill="#8F6516">
+          <g transform="translate(225.8 28.4) rotate(115)"><rect x="-3.5" y="-11" width="7" height="22" rx="2"/></g>
+          <g transform="translate(181.5 16.5) rotate(95)"><rect x="-3.5" y="-11" width="7" height="22" rx="2"/></g>
+        </g>
+        <g font-family="Archivo, sans-serif" font-size="11.5" font-weight="600">
+          <text x="316" y="117" fill="currentColor" opacity=".7">15&#176;</text>
+          <text x="288" y="62" fill="currentColor" opacity=".7">40&#176;</text>
+          <text x="243" y="24" fill="#8F6516">65&#176;</text>
+          <text x="196" y="13" fill="#8F6516">85&#176;</text>
+        </g>
+      </svg>
+      <figcaption><b>ရွှေရောင် စက်ဝိုင်းနှစ်ခုကို လူများ ချန်တတ်သည်။</b> ယခင်တစ်ကြိမ်တွင် အပေါ်စီးမှ မရိုက်ခဲ့သဖြင့် အမိုး ဝါးသွားသည်။</figcaption>
+    </figure>
+      <figure>
+      <svg viewBox="0 0 330 146" role="img" aria-label="ဖုန်းဘောင် သုံးမျိုး">
+        <g fill="none" stroke="currentColor" stroke-width="1.3" opacity=".42">
+          <rect x="14" y="8" width="80" height="126" rx="9"/>
+          <rect x="125" y="8" width="80" height="126" rx="9"/>
+          <rect x="236" y="8" width="80" height="126" rx="9"/>
+        </g>
+        <g transform="translate(44 54)" color="currentColor" opacity=".72"><use href="#sala" width="20" height="21"/></g>
+        <g transform="translate(133 40)" color="currentColor" opacity=".85"><use href="#sala" width="64" height="68"/></g>
+        <clipPath id="clipB"><rect x="237" y="9" width="78" height="124" rx="8"/></clipPath>
+        <g clip-path="url(#clipB)"><g transform="translate(224 18)" color="currentColor" opacity=".85"><use href="#sala" width="104" height="111"/></g></g>
+        <g font-size="15" font-weight="700" text-anchor="middle" font-family="Archivo, sans-serif">
+          <text x="54" y="130" fill="#9C2B21">&#10005;</text>
+          <text x="165" y="130" fill="#2A6650">&#10003;</text>
+          <text x="276" y="130" fill="#9C2B21">&#10005;</text>
+        </g>
+        <g transform="translate(299 24)">
+          <circle cx="0" cy="0" r="9" fill="#9C2B21" opacity=".12"/>
+          <g fill="#9C2B21"><circle cx="0" cy="-4.6" r="3"/><circle cx="4.4" cy="-1.4" r="3"/>
+            <circle cx="2.7" cy="3.7" r="3"/><circle cx="-2.7" cy="3.7" r="3"/>
+            <circle cx="-4.4" cy="-1.4" r="3"/></g>
+        </g>
+      </svg>
+      <figcaption><b>ဝေးလွန်း / မှန်ကန် / နီးလွန်း။</b> ပန်းပွင့်ပုံ ပေါ်လျှင် မှန်ဘီလူး ပြောင်းသွားပြီ။</figcaption>
+    </figure>
+    </div>
+  </div>
+
+  <div class="box no">
+    <h3 my>လုံးဝ မလုပ်ရန်</h3>
+    <ul>
+        <li>ဆွဲချဲ့၊ ဖြတ်တောက်၊ တည်းဖြတ်၊ ဖီလ်တာ။</li>
+        <li>Portrait မုဒ်၊ Night mode၊ ဖလက်ရှ်။</li>
+        <li>ကိုယ်မလျှောက်ဘဲ မော်ဒယ်ကို လှည့်ခြင်း။</li>
+        <li>ကိုယ့်အရိပ် မော်ဒယ်ပေါ် ကျခြင်း။</li>
+        <li>Messenger၊ LINE၊ WhatsApp ဖြင့် ပို့ခြင်း။ <b>AirDrop</b> သို့မဟုတ် Drive (Original quality) သုံးပါ။</li>
+    </ul>
+  </div>
+
+  <div class="foot"><span>ဖုန်းတစ်လုံး &#183; မှန်ဘီလူးတစ်ခု &#183; တစ်ကြိမ်တည်း</span><span>စာလာ ချတုရမုခ် ဖိုက်ချစ် &#183; စားပွဲတင်မော်ဒယ်</span></div>
+</section>

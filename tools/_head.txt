@@ -1,0 +1,230 @@
+<title>Sala Model Capture Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap">
+
+<style>
+  :root {
+    /* gilded wood, lacquer base, mirror-glass inlay - taken off the model itself */
+    --paper:      #FBF9F4;
+    --surface:    #FFFFFF;
+    --surface-2:  #F5F1E7;
+    --ink:        #211A11;
+    --muted:      #6C6154;
+    --rule:       #E2DACA;
+    --gold:       #8F6516;
+    --gold-wash:  #F4E9CD;
+    --lacquer:    #9C2B21;
+    --lacquer-wash:#F7E6E2;
+    --jade:       #2A6650;
+    --jade-wash:  #E4EFE9;
+    --shadow: 0 1px 2px rgba(33,26,17,.05), 0 12px 30px -18px rgba(33,26,17,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #14120D;
+      --surface:    #1C1913;
+      --surface-2:  #232018;
+      --ink:        #F3ECDE;
+      --muted:      #A79A87;
+      --rule:       #3A3325;
+      --gold:       #D9AE55;
+      --gold-wash:  #322910;
+      --lacquer:    #E28170;
+      --lacquer-wash:#331B16;
+      --jade:       #74C49C;
+      --jade-wash:  #16291F;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #14120D;
+    --surface:    #1C1913;
+    --surface-2:  #232018;
+    --ink:        #F3ECDE;
+    --muted:      #A79A87;
+    --rule:       #3A3325;
+    --gold:       #D9AE55;
+    --gold-wash:  #322910;
+    --lacquer:    #E28170;
+    --lacquer-wash:#331B16;
+    --jade:       #74C49C;
+    --jade-wash:  #16291F;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 34px -18px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 15px/1.5 "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    padding-block: 26px 60px;
+    padding-left: 16px; padding-right: 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 26px;
+  }
+  .my { font-family: "Noto Sans Myanmar", "Padauk", "Myanmar Text", sans-serif; line-height: 1.85; }
+
+  .sheet {
+    width: 100%; max-width: 900px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    padding: 26px clamp(16px, 3.4vw, 34px) 28px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+
+  /* ---- masthead -------------------------------------------------- */
+  .head { display: flex; flex-direction: column; gap: 7px;
+          border-bottom: 2px solid var(--gold); padding-bottom: 13px; }
+  .eyebrow { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 10.5px;
+             letter-spacing: .17em; text-transform: uppercase; color: var(--gold); }
+  .my .eyebrow, .eyebrow.my { letter-spacing: .06em; }
+  h1 { font-family: "Archivo", sans-serif; font-weight: 700; font-size: 27px;
+       line-height: 1.14; margin: 0; text-wrap: balance; letter-spacing: -.015em; }
+  h1.my { font-size: 23px; line-height: 1.5; letter-spacing: 0; }
+  .stand { margin: 0; color: var(--muted); max-width: 68ch; font-size: 13.5px; }
+  .kit { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+  .kit span { font-size: 11.5px; padding: 3px 9px; border-radius: 2px;
+              background: var(--surface-2); border: 1px solid var(--rule);
+              font-variant-numeric: tabular-nums; }
+
+  /* ---- layout ---------------------------------------------------- */
+  .row { display: grid; gap: 22px; grid-template-columns: 1.08fr .92fr; align-items: start; }
+  .row.flip { grid-template-columns: .92fr 1.08fr; }
+  .stack { display: flex; flex-direction: column; gap: 17px; }
+  .pair { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; align-items: start; }
+  @media (max-width: 720px) {
+    .row, .row.flip, .trio, .pair { grid-template-columns: 1fr; }
+  }
+
+  /* ---- step blocks ----------------------------------------------- */
+  h2 { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 14.5px;
+       margin: 0 0 9px; display: flex; align-items: baseline; gap: 9px; letter-spacing: -.005em; }
+  h2.my { font-size: 14px; }
+  .num { font-family: "Archivo", sans-serif; font-weight: 700; font-size: 12px;
+         color: var(--gold); border-bottom: 2px solid var(--gold-wash); padding-bottom: 1px;
+         font-variant-numeric: tabular-nums; }
+  ol.steps, ul.steps { margin: 0; padding-left: 0; list-style: none;
+                       display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+  /* hanging indent, not grid: a grid item would be created for every inline
+     child, which breaks any sentence containing <b> into separate columns */
+  ol.steps li, ul.steps li { position: relative; padding-left: 24px; }
+  .my ol.steps li::before { content: counter(s, myanmar) "။"; }
+  ol.steps li::before { content: counter(s) "."; counter-increment: s;
+                        position: absolute; left: 0; top: 1px; width: 18px; text-align: left;
+                        font-family: "Archivo", sans-serif; font-weight: 600; font-size: 11.5px;
+                        color: var(--gold); font-variant-numeric: tabular-nums; }
+  ol.steps { counter-reset: s; }
+  ul.steps li { padding-left: 17px; }
+  ul.steps li::before { content: "·"; position: absolute; left: 2px; top: -2px;
+                        color: var(--gold); font-weight: 700; font-size: 18px; line-height: 1.2; }
+  .why { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  b, strong { font-weight: 700; }
+  .ui { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 12.5px;
+        background: var(--surface-2); border: 1px solid var(--rule);
+        padding: 0 4px; border-radius: 2px; white-space: nowrap; }
+
+  /* ---- circles table --------------------------------------------- */
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 330px; }
+  caption { text-align: left; color: var(--muted); font-size: 12px; padding-bottom: 6px; }
+  th { font-family: "Archivo", sans-serif; font-weight: 600; font-size: 10.5px;
+       letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+       text-align: left; padding: 0 8px 5px 0; border-bottom: 1px solid var(--rule); }
+  th.my { letter-spacing: 0; text-transform: none; font-size: 11.5px; }
+  td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top;
+       font-variant-numeric: tabular-nums; }
+  tr.key td { background: var(--gold-wash); }
+  tr.key td:first-child { box-shadow: inset 3px 0 0 var(--gold); padding-left: 7px; }
+  td.n { font-family: "Archivo", sans-serif; font-weight: 600; }
+
+  /* ---- figures ---------------------------------------------------- */
+  figure { margin: 0; display: flex; flex-direction: column; gap: 7px; }
+  figure svg { width: 100%; height: auto; display: block;
+               background: var(--surface-2); border: 1px solid var(--rule); border-radius: 3px; }
+  figcaption { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  figcaption b { color: var(--ink); font-weight: 600; }
+
+  /* ---- call-out boxes --------------------------------------------- */
+  .box { border: 1px solid var(--rule); border-radius: 3px; padding: 13px 15px;
+         display: flex; flex-direction: column; gap: 8px; }
+  .box.no { background: var(--lacquer-wash); border-color: color-mix(in srgb, var(--lacquer) 30%, transparent); }
+  .box.go { background: var(--jade-wash); border-color: color-mix(in srgb, var(--jade) 30%, transparent); }
+  .box h3 { font-family: "Archivo", sans-serif; font-size: 12px; margin: 0;
+            letter-spacing: .11em; text-transform: uppercase; }
+  .box h3.my { letter-spacing: 0; text-transform: none; font-size: 13px; }
+  .box.no h3 { color: var(--lacquer); }
+  .box.go h3 { color: var(--jade); }
+  .box ul { margin: 0; padding-left: 0; list-style: none;
+            display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .box li { position: relative; padding-left: 19px; }
+  .box.no li::before { content: "✕"; position: absolute; left: 0; top: 1px;
+                       color: var(--lacquer); font-size: 11px; }
+  .box.go li::before { content: "✓"; position: absolute; left: 0; top: 0;
+                       color: var(--jade); font-size: 12px; }
+
+  .foot { border-top: 1px solid var(--rule); padding-top: 11px;
+          font-size: 11.5px; color: var(--muted); display: flex;
+          justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  /* ---- print ------------------------------------------------------ */
+  @page { size: A4; margin: 9mm; }
+  @media print {
+    :root {
+      --paper:#fff; --surface:#fff; --surface-2:#F6F2E9; --ink:#1A150E; --muted:#5C5347;
+      --rule:#D8CFBD; --gold:#8A6114; --gold-wash:#F4E9CD; --lacquer:#94271E;
+      --lacquer-wash:#F9EBE8; --jade:#265E49; --jade-wash:#E8F1EC; --shadow:none;
+    }
+    body { padding: 0; gap: 0; background: #fff; font-size: 8.5pt; }
+    .sheet { max-width: none; border: 0; box-shadow: none; padding: 0; border-radius: 0;
+             break-after: page; page-break-after: always; gap: 7px; }
+    .sheet:last-of-type { break-after: auto; page-break-after: auto; }
+    .my { line-height: 1.42; }
+    .head { gap: 3px; padding-bottom: 7px; }
+    h1 { font-size: 18pt; } h1.my { font-size: 13pt; }
+    .stand { font-size: 8pt; max-width: none; }
+    .kit { margin-top: 1px; gap: 4px; } .kit span { font-size: 7pt; padding: 1px 6px; }
+    .eyebrow { font-size: 7pt; }
+    .row { gap: 13px; grid-template-columns: 1.22fr .78fr; }
+    .row.flip { grid-template-columns: .78fr 1.22fr; }
+    .stack { gap: 9px; }
+    h2 { font-size: 10pt; margin-bottom: 5px; gap: 7px; } h2.my { font-size: 9.5pt; }
+    .num { font-size: 8.5pt; }
+    ol.steps, ul.steps { gap: 3px; font-size: 8pt; }
+    .my ol.steps, .my ul.steps { gap: 2px; }
+    ol.steps li, ul.steps li { padding-left: 15px; }
+    .why { font-size: 7pt; margin-top: 0; }
+    .ui { font-size: 7.5pt; }
+    table { font-size: 8pt; min-width: 0; } caption { font-size: 7pt; padding-bottom: 3px; }
+    th { font-size: 7pt; padding-bottom: 3px; } td { padding: 2px 6px 2px 0; }
+    figure { gap: 3px; } figcaption { font-size: 7pt; line-height: 1.3; }
+    .box { padding: 8px 11px; gap: 4px; } .box ul { gap: 3px; font-size: 8pt; }
+    .box h3 { font-size: 8.5pt; } .box li { padding-left: 16px; }
+    .foot { font-size: 7pt; padding-top: 6px; }
+  }
+</style>
+
+<!-- one drawing of the pavilion, reused across every figure -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <symbol id="sala" viewBox="0 0 60 64">
+      <path d="M11 27 C4 23 3 14 7 8 C7 15 10 21 15 24 Z" fill="currentColor" opacity=".9"/>
+      <path d="M49 27 C56 23 57 14 53 8 C53 15 50 21 45 24 Z" fill="currentColor" opacity=".9"/>
+      <path d="M30 4 L47 22 L13 22 Z" fill="currentColor" opacity=".9"/>
+      <path d="M30 16 L54 34 L6 34 Z" fill="currentColor" opacity=".72"/>
+      <rect x="17" y="34" width="26" height="13" fill="currentColor" opacity=".38"/>
+      <rect x="21" y="36" width="3.5" height="11" fill="currentColor" opacity=".8"/>
+      <rect x="35.5" y="36" width="3.5" height="11" fill="currentColor" opacity=".8"/>
+      <rect x="11" y="47" width="38" height="5" fill="currentColor" opacity=".62"/>
+      <rect x="6" y="52" width="48" height="6" fill="currentColor" opacity=".52"/>
+      <rect x="24" y="58" width="12" height="4" fill="currentColor" opacity=".4"/>
+    </symbol>
+
+    <marker id="ar" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 1 L9 5 L0 9 Z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>
+

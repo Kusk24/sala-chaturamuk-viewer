@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sala model — Gaussian Splatting, tabletop capture</title>
+<style>
+  /* Comparison page (CLAUDE.md amendment 2026-08-29): a 3D Gaussian Splatting
+     radiance field, shown alongside the image-based renderer, never mixed into
+     it. Same rules as the other pages: no build step, no framework, no external
+     assets -- the renderer is vendored in vendor/splat.js and the model is
+     embedded as a JS global so the page opens straight from file://. */
+  :root {
+    color-scheme: dark;
+    --bg: #0d0b09; --bg-deep: #080706;
+    --line-soft: rgba(216,180,90,.18);
+    --text: #f3eadc; --muted: #b8aa99;
+    --accent: #d8b45a; --roof-red: #843a32;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text);
+    background:
+      radial-gradient(circle at 12% -10%, rgba(132,58,50,.18), transparent 34rem),
+      radial-gradient(circle at 88% 8%, rgba(216,180,90,.09), transparent 30rem),
+      linear-gradient(180deg, #110d0a 0, var(--bg) 28rem, var(--bg-deep) 100%);
+    font: 15px/1.5 "Noto Sans Thai", "Leelawadee UI", Tahoma,
+      -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column;
+  }
+  header {
+    padding: 24px clamp(20px,4vw,56px) 22px;
+    border-bottom: 1px solid rgba(216,180,90,.14);
+    background: rgba(8,7,6,.42);
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; width: 100%; }
+  h1 { margin: 0 0 6px; font-size: clamp(21px,3vw,29px); letter-spacing: -.3px; }
+  .badge {
+    display: inline-block; vertical-align: middle; margin-left: 10px;
+    padding: 3px 10px; border-radius: 999px; font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+    color: var(--accent); border: 1px solid var(--line-soft);
+    background: rgba(216,180,90,.07);
+  }
+  p.lede { margin: 0 0 12px; color: var(--muted); max-width: 76ch; }
+  p.lede em { color: var(--text); font-style: normal; font-weight: 600; }
+  main { flex: 1; padding: 22px clamp(20px,4vw,56px) 40px; }
+  .stage {
+    position: relative; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--line-soft); background: #000;
+    box-shadow: 0 22px 60px rgba(0,0,0,.42); aspect-ratio: 16/10;
+  }
+  #canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }
+  #spinner {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--muted); font-size: 14px; letter-spacing: .04em; z-index: 3;
+  }
+  #message { position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--roof-red); padding: 24px; text-align: center; z-index: 4; }
+  #progress { position: absolute; left: 0; top: 0; height: 2px;
+    background: var(--accent); width: 0; z-index: 5; }
+  .hud {
+    position: absolute; left: 12px; bottom: 10px; z-index: 2;
+    font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--muted); background: rgba(8,7,6,.55);
+    border: 1px solid var(--line-soft); border-radius: 8px; padding: 5px 9px;
+  }
+  .facts { display: grid; gap: 14px; margin-top: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); }
+  .fact { border: 1px solid var(--line-soft); border-radius: 12px;
+    padding: 13px 15px; background: rgba(24,19,16,.5); }
+  .fact dt { font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 5px; }
+  .fact dd { margin: 0; font-size: 14px; }
+  .note { margin-top: 22px; color: var(--muted); font-size: 13.5px; max-width: 82ch; }
+  .note strong { color: var(--text); }
+  kbd { border: 1px solid var(--line-soft); border-radius: 5px; padding: 1px 5px;
+    font: 11px ui-monospace, Menlo, monospace; color: var(--text); }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Sala model <span class="badge">tabletop capture</span></h1>
+  <p class="lede">
+    A carved miniature of the pavilion, photographed indoors on a wooden board rather than on the
+    lake shore. <em>301 photographs</em> in six orbit rings from one 301-frame session, and
+    <em>all 301 registered</em> &mdash; the full set, no sub-model left behind.
+    <em><span class="n">&mdash;</span> Gaussians</em> after 30,000 iterations. The point of this
+    capture is the part the real pavilion could never give: rings that look <em>down onto the
+    roof</em>.
+  </p>
+  <nav id="viewnav"></nav>
+</div></header>
+
+<main><div class="wrap">
+  <div class="stage">
+    <canvas id="canvas"></canvas>
+    <div id="progress"></div>
+    <div id="spinner">decoding <span class="n">&mdash;</span> Gaussians…</div>
+    <div id="message" hidden></div>
+    <div class="hud"><span id="fps">—</span> · <span id="camid"></span></div>
+  </div>
+
+  <dl class="facts">
+    <div class="fact"><dt>Method</dt><dd>3D Gaussian Splatting (Kerbl et al., 2023)</dd></div>
+    <div class="fact"><dt>Input</dt><dd>301 photographs, six orbit rings<br><span style="color:var(--muted)">301 of 301 registered</span></dd></div>
+    <div class="fact"><dt>Training</dt><dd>30,000 iterations, NVIDIA T4 ×2<br><span style="color:var(--muted)">no sky mask — shot indoors</span></dd></div>
+    <div class="fact"><dt>Primitive</dt><dd><span class="n">&mdash;</span> Gaussians shown — of 235,390 trained, no mesh</dd></div>
+  </dl>
+
+  <p class="note">
+    Drag to orbit, or use the buttons below the model &mdash; <kbd>&#8984;</kbd>/<kbd>Ctrl</kbd>+scroll to zoom,
+    <kbd>&#8679;</kbd>+drag to pan, <kbd>,</kbd> and <kbd>.</kbd> to step between photograph positions.
+  </p>
+
+  <dl class="facts">
+    <div class="fact"><dt>PSNR</dt><dd>25.08 dB <span style="color:var(--muted)">(38 held-out views)</span></dd></div>
+    <div class="fact"><dt>SSIM</dt><dd>0.851</dd></div>
+    <div class="fact"><dt>LPIPS</dt><dd>0.371 <span style="color:var(--muted)">lower is better</span></dd></div>
+    <div class="fact"><dt>Registered</dt><dd>301 / 301 <span style="color:var(--muted)">one model, no split</span></dd></div>
+  </dl>
+
+  <dl class="facts">
+    <div class="fact"><dt>Best view</dt><dd>30.58 dB</dd></div>
+    <div class="fact"><dt>Median view</dt><dd>25.93 dB</dd></div>
+    <div class="fact"><dt>Worst view</dt><dd>16.58 dB <span style="color:var(--muted)">hazed over</span></dd></div>
+    <div class="fact"><dt>Gaussians</dt><dd>222,199 <span style="color:var(--muted)">from 235,390</span></dd></div>
+  </dl>
+
+  <p class="note">
+    <strong>The average flatters it; the spread is the honest picture.</strong> Across the
+    38 held-out photographs the score runs from <strong>16.58 dB to 30.58 dB</strong>,
+    median 25.93. Those numbers describe the model <em>as trained</em>. The good views are
+    genuinely good &mdash; carving, inlaid glass and red steps come back close to the photograph.
+    The worst were veiled by a milky haze in front of the subject: semi-transparent Gaussians
+    floating in the empty space between camera and model. The white cloth behind it carries almost
+    no texture, so nothing in the optimisation pins that space down and a translucent sheet there
+    costs the loss very little. It is the floater failure the outdoor runs met in the sky, with
+    cloth standing in for sky.
+  </p>
+
+  <p class="note">
+    <strong>What you are looking at has been cleaned, and the cleaning is not free of meaning.</strong>
+    The model on this page keeps 77,626 of the 235,390 trained Gaussians. Three cuts were
+    applied to the trained result &mdash; no retraining, no second run on the GPU: everything beyond
+    a tight radius of the model's own axis (the haze), everything below the top of the wooden board
+    (the board and the cloth it sat on), and every Gaussian whose largest axis exceeded a size the
+    real surface never needs (the remaining floaters). A gamma lift then raised the midtones, since
+    the object was photographed indoors and reads dark against a black page.
+  </p>
+
+  <p class="note">
+    <strong>The scores above were not re-measured after that.</strong> They belong to the model the
+    optimiser produced, haze included, scored against the held-out photographs the standard way.
+    Cropping changes what is displayed, not what was learned, and re-scoring a cropped model against
+    photographs that still contain a board and a backdrop would be measuring the crop rather than the
+    reconstruction. The honest reading is: these are the numbers for the trained model, and this is
+    the trained model with the empty space taken out of it.
+  </p>
+
+  <p class="note">
+    <strong>Every photograph registered, and that is the headline.</strong> The outdoor captures
+    never managed it: the September pavilion run placed 395 of 446 and filed the interior frames as
+    a separate sub-model that was never trained. Here all 301 frames landed in a single
+    reconstruction. The subject is small, lit evenly and never moved, and the camera walked six
+    complete rings around it &mdash; the conditions the capture guide has been asking for since the
+    first attempt folded.
+  </p>
+
+  <p class="note">
+    <strong>The matching had to change, and the reason was measured rather than assumed.</strong>
+    Every earlier run used sequential matching with loop detection off, because the real pavilion is
+    four-faced and vocabulary-tree retrieval cannot tell one face from another. Here the six rings
+    only connect through pairs about sixty frames apart in capture order &mdash; frame 30 and frame
+    91 share 91 verified inliers &mdash; which no sequential window reaches, while the ring seams
+    that sequential <em>would</em> have used carry 12 to 25. Sequential would have joined six rings
+    by their weakest joints. Exhaustive matching was safe to use because the four-fold trap does not
+    spring here: a pair ninety degrees apart scores nine inliers, since the wood grain and the folds
+    of the cloth make every direction's background different. On a set this small exhaustive is also
+    simply affordable.
+  </p>
+
+  <p class="note">
+    <strong>No sky mask.</strong> The two previous pavilion runs turn on whether the sky is trained,
+    masked or painted out. Indoors the question does not arise, and the segmentation network that
+    finds sky would have been at real risk of calling the bright white cloth behind the model sky
+    and cutting a hole in the backdrop. The background here is removed geometrically instead, by the
+    same crop and size filter the other runs apply after training.
+  </p>
+
+  <p class="note">
+    <strong>What it cannot show.</strong> The model stands on a board, so its underside was never
+    photographed and nothing in the reconstruction can invent it. The white cloth behind it carries
+    little texture, so what survives the crop there is thin. And this is a <em>model of</em> the
+    pavilion, not the pavilion &mdash; it belongs beside the outdoor runs as a controlled comparison,
+    not as a replacement for them.
+  </p>
+
+  <p class="note">
+    Renderer: <strong>antimatter15/splat</strong>, MIT licensed, vendored in
+    <code>vendor/splat.js</code> with its licence. Modified only to read the model, the camera
+    poses and the opening view from embedded globals instead of <code>fetch()</code>, which a
+    <code>file://</code> page refuses.
+  </p>
+</div></main>
+
+<script src="splat_salamodel.js"></script>
+<script>document.querySelectorAll(".n").forEach(e => e.textContent = window.SPLAT_COUNT.toLocaleString("en"));</script>
+<script src="vendor/splat.js"></script>
+<script src="nav.js"></script>
+<script src="orbit-ui.js"></script>
+</body>
+</html>
