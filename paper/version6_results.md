@@ -66,6 +66,14 @@ far too loose to do the job. §8.
 
 301 photographs, 08:14–08:42, a single 28-minute session.
 
+![The subject](figs_v6/fig_v6_subject.jpg)
+*The subject: a carved miniature of the pavilion, roughly 15 cm tall, on a wooden board against a
+cloth backdrop. Front at eye level, three-quarter showing the inlaid roof, side, and looking down
+onto the roof — the viewpoint the building itself has never been photographed from.*
+
+![Capture coverage](figs_v6/fig_v6_capture_orbits.jpg)
+*One prepared frame from each of the six orbit rings, in capture order.*
+
 | Property | Value |
 |---|---|
 | Camera | iPhone 17 Pro, all 301 frames |
@@ -291,3 +299,15 @@ Do not spend GPU on more iterations; the Version 5 extrapolation bounding the re
 
 Raw outputs are in `Term-Project/kaggle_out/salamodel/`. The notebook is
 `notebooks/KAGGLE_salamodel_sep12.ipynb`; the cleaning script is `scratchpad/clean_salamodel.py`.
+
+---
+
+## 13. Figures
+
+| File | Shows |
+|---|---|
+| `figs_v6/fig_v6_subject.jpg` | The miniature itself, four photographs from the capture |
+| `figs_v6/fig_v6_capture_orbits.jpg` | One frame from each of the six orbit rings |
+| `figs_v6/fig_v6_fog_before_after.png` | Trained vs cleaned model from the identical camera |
+| `figs_v6/fig_v6_turntable.png` | The cleaned model at 0°, 90°, 180°, 270° |
+| `figs_v6/fig_v6_heldout_gt_vs_render.jpg` | Held-out photographs against renders, with per-view PSNR |

@@ -100,6 +100,11 @@ head('A. Summary', 2)
 para('A carved **miniature** of the pavilion was photographed indoors on a wooden board and '
      'reconstructed end to end. **Every photograph registered** — the first complete registration '
      'in this project.')
+figure('fig_v6_subject.jpg',
+       'The subject. A carved miniature of Sala Chaturamuk Phaichit, roughly 15 cm tall, standing '
+       'on a wooden board against a cloth backdrop. Four of the 301 photographs: front at eye '
+       'level, three-quarter showing the inlaid roof, side, and looking down onto the roof — the '
+       'viewpoint the building itself has never been photographed from.', width=4.6)
 table([['','Photographs','Registered','Gaussians (trained)','PSNR','SSIM','LPIPS'],
        ['**Sala model** (12 Sep)','301','**301**','222,199','**25.08 dB**','**0.851**','0.371'],
        ['Sala, sky trained (7 Sep)','446','395','593,708','23.45 dB','0.769','0.333'],
@@ -133,8 +138,10 @@ para('**The camera moves and the object does not** — a turntable capture canno
      'consecutive frames is **13.88 on the frame corners** (background) against 20.58 at the '
      'centre; a fixed camera would put the corners near zero.')
 figure('fig_v6_capture_orbits.jpg',
-       'Prepared frames sampled across the six orbits. Orbits 5 and 6 look down onto the roof — the '
-       'coverage the pavilion has never had.', width=6.4)
+       'One prepared frame from each of the six orbit rings, in capture order. Elevation rises '
+       'across the set: the later rings look down onto the roof, which is the coverage the '
+       'pavilion has never had. All 301 frames are 1200 × 1600 after the orientation fix of '
+       'section D.', width=6.2)
 
 head('C. Why the Matching Had to Change', 2)
 para('Every previous run used sequential matching with loop detection off, because the pavilion is '
