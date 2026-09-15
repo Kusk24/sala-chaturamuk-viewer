@@ -1,0 +1,7 @@
+{
+ "lit_trained_pct": 93.1,
+ "lit_cleaned_pct": 8.8,
+ "threshold": "sum of RGB > 30",
+ "view": "notebook opening view of splat_salamodel.js",
+ "renderer": "tools/splat_render.py, 900x900"
+}
